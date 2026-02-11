@@ -62,7 +62,8 @@ export async function GET(request: Request) {
         home_team: match.home_team || 'Takım 1',
         away_team: match.away_team || 'Takım 2',
         league: league,
-        country: match.country || '',
+        // Tipte country yok ama bazı kaynaklar gönderiyor olabilir; o yüzden esnek tutuyoruz
+        country: (match as any).country || '',
         date: match.date || new Date().toISOString().split('T')[0],
         time: match.time || '',
         status: match.status || 'NS',

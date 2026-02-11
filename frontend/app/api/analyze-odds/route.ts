@@ -93,7 +93,9 @@ const getOddRange = (odd: number): string => {
 
 // En yakın oranı bul
 const findClosestOdd = (targetOdd: number, odds: Record<string, any>): { odd: string; data: any } | null => {
-  let closest: { odd: string; data: any; diff: number } | null = null
+  // TS'in Object.entries + daraltma kombinasyonunda "never" hatası vermemesi için
+  // burada bilinçli olarak `any` kullanıyoruz; runtime mantık zaten güvenli.
+  let closest: any = null
   
   Object.entries(odds).forEach(([oddStr, data]) => {
     // Aralık formatından ortalama değeri çıkar

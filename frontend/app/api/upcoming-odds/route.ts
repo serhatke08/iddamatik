@@ -10,6 +10,24 @@ export async function GET(request: Request) {
     const formattedMatches = upcomingMatches.map((match) => {
       // Lig ismini normalize et
       let league = match.league || 'Bilinmeyen Lig'
+
+      // Bazı sağlayıcılar "Country — League" veya "Country - League" formatı döndürüyor.
+      // Ne gelirse gelsin, son tire/uzun tireden SONRASINI lig adı kabul ediyoruz.
+      const separators = ['—', '-', '–']
+      let lastIdx = -1
+      separators.forEach(sep => {
+        const idx = league.lastIndexOf(sep)
+        if (idx > lastIdx) lastIdx = idx
+      })
+      if (lastIdx !== -1 && lastIdx + 1 < league.length) {
+        league = league.slice(lastIdx + 1).trim()
+      }
+
+      // Ek güvenlik: içinde "super lig" geçiyorsa direkt "Super Lig" yap
+      if (league.toLowerCase().includes('super lig')) {
+        league = 'Super Lig'
+      }
+
       if (league === 'Premiership') league = 'Scottish Premiership'
       if (league === 'Serie A Betano') league = 'Serie A'
       

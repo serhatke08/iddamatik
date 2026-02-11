@@ -94,13 +94,14 @@ export async function GET(request: Request) {
       'Bundesliga': 5,
       'Ligue 1': 6,
       'Champions League': 7,
-      'Eredivisie': 8,
-      'Liga Portugal': 9,
-      'Scottish Premiership': 10,
-      'MLS': 11,
-      'A-League': 12,
-      'Brazil Serie A': 13,
-      'Russia Premier League': 14
+      'Europa League': 8,
+      'Eredivisie': 9,
+      'Liga Portugal': 10,
+      'Scottish Premiership': 11,
+      'MLS': 12,
+      'A-League': 13,
+      'Brazil Serie A': 14,
+      'Russia Premier League': 15
     }
     
     // Önce saate göre, sonra lig önceliğine göre sırala

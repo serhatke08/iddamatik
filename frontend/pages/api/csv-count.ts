@@ -8,8 +8,9 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   try {
-    const total = csvService.loadAll().length
-    res.status(200).json({ total })
+    const count = csvService.loadAll().length
+    // Frontend `page.tsx` bu endpointten `count` bekliyor (dbTotalCount = response.data?.count)
+    res.status(200).json({ count })
   } catch (error) {
     res.status(500).json({ detail: `CSV toplam sayım hatası: ${String(error)}` })
   }

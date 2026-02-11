@@ -83,13 +83,14 @@ export default function AnalysisRobotPage() {
         'Bundesliga': 5,
         'Ligue 1': 6,
         'Champions League': 7,
-        'Eredivisie': 8,
-        'Liga Portugal': 9,
-        'Scottish Premiership': 10,
-        'MLS': 11,
-        'A-League': 12,
-        'Brazil Serie A': 13,
-        'Russia Premier League': 14
+        'Europa League': 8,
+        'Eredivisie': 9,
+        'Liga Portugal': 10,
+        'Scottish Premiership': 11,
+        'MLS': 12,
+        'A-League': 13,
+        'Brazil Serie A': 14,
+        'Russia Premier League': 15
       }
       
       // Önce saate göre, sonra lig önceliğine göre sırala
@@ -203,11 +204,19 @@ export default function AnalysisRobotPage() {
     <div className="container">
       <nav className="navbar">
         <div className="navbar-content">
-          <h1>⚽ İddaa Analiz Platformu</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <img
+              src="/logo.png"
+              alt="İddaamatik logo"
+              style={{ height: '32px', width: '32px', objectFit: 'contain' }}
+            />
+            <h1>İddaa Analiz Platformu</h1>
+          </div>
           <nav>
             <Link href="/">Ana Sayfa</Link>
             <Link href="/odds">Oranlar</Link>
             <Link href="/analysis-robot">Analiz Robotu</Link>
+            <Link href="/stats">İstatistik</Link>
           </nav>
         </div>
       </nav>
@@ -322,95 +331,121 @@ export default function AnalysisRobotPage() {
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                 <thead>
                   <tr style={{ borderBottom: '2px solid #374151' }}>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600 }}>Bahis Türü</th>
-                    <th style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>Oran</th>
-                    <th style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <span style={{ color: '#60a5fa' }}>Yüzeysel Tahmin</span>
-                        <span style={{ fontSize: '10px', color: '#9ca3af', fontWeight: 400 }}>(Gruplanmış)</span>
-                      </div>
-                    </th>
-                    <th style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <span style={{ color: '#34d399' }}>Derinlemesine Tahmin</span>
-                        <span style={{ fontSize: '10px', color: '#9ca3af', fontWeight: 400 }}>(Detaylı)</span>
-                      </div>
-                    </th>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600 }}>Açıklama</th>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600 }}>Metri̇k / Bahis</th>
+                    {analysisResult.analysis.map((item, idx) => (
+                      <th
+                        key={idx}
+                        style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}
+                      >
+                        {item.betType}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {analysisResult.analysis.map((item, idx) => (
-                    <tr
-                      key={idx}
-                      style={{
-                        borderBottom: '1px solid #374151',
-                        backgroundColor: hoveredBet === item.betKey ? '#1f2937' : 'transparent',
-                        cursor: 'pointer'
-                      }}
-                      onMouseEnter={() => setHoveredBet(item.betKey)}
-                      onMouseLeave={() => setHoveredBet(null)}
-                    >
-                      <td style={{ padding: '12px', fontWeight: 600, fontSize: '14px' }}>{item.betType}</td>
-                      <td style={{ padding: '12px', textAlign: 'center', fontWeight: 600, fontSize: '14px' }}>{item.odd.toFixed(2)}</td>
-                      <td style={{ padding: '12px', textAlign: 'center', backgroundColor: hoveredBet === item.betKey ? '#1a2332' : 'transparent' }}>
-                        <div style={{ fontSize: '11px', color: '#9ca3af', marginBottom: '6px' }}>
-                          {item.superficial.total} maç ({item.oddRange})
-                        </div>
-                        <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#60a5fa', marginBottom: '4px' }}>
-                          {item.superficial.rate.toFixed(2)}%
-                        </div>
-                        <div style={{ fontSize: '10px', color: '#6b7280' }}>
-                          Tutmuş: <span style={{ color: '#22c55e', fontWeight: 600 }}>{item.superficial.hit}</span> | 
-                          Yatmış: <span style={{ color: '#ef4444', fontWeight: 600 }}>{item.superficial.total - item.superficial.hit}</span>
-                        </div>
+                  {/* Oran satırı */}
+                  <tr style={{ borderBottom: '1px solid #374151' }}>
+                    <td style={{ padding: '12px', fontWeight: 600 }}>Oran</td>
+                    {analysisResult.analysis.map((item, idx) => (
+                      <td key={idx} style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>
+                        {item.odd.toFixed(2)}
                       </td>
-                      <td style={{ padding: '12px', textAlign: 'center', backgroundColor: hoveredBet === item.betKey ? '#1a2332' : 'transparent' }}>
-                        {item.deep ? (
-                          <>
-                            <div style={{ fontSize: '11px', color: '#9ca3af', marginBottom: '6px' }}>
-                              {item.deep.total} maç ({item.deep.odd})
-                            </div>
-                            <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#34d399', marginBottom: '4px' }}>
-                              {item.deep.rate.toFixed(2)}%
-                            </div>
-                            <div style={{ fontSize: '10px', color: '#6b7280' }}>
-                              Tutmuş: <span style={{ color: '#22c55e', fontWeight: 600 }}>{item.deep.hit}</span> | 
-                              Yatmış: <span style={{ color: '#ef4444', fontWeight: 600 }}>{item.deep.total - item.deep.hit}</span>
-                            </div>
-                          </>
-                        ) : (
-                          <div style={{ color: '#6b7280', fontSize: '12px' }}>Veri yok</div>
-                        )}
-                      </td>
-                    <td style={{ padding: '12px', fontSize: '12px', color: '#9ca3af' }}>
-                      {hoveredBet === item.betKey ? (
-                        <div style={{ maxWidth: '500px', whiteSpace: 'pre-line', lineHeight: '1.6' }}>
-                          <strong style={{ color: '#e5e7eb', marginBottom: '8px', display: 'block' }}>Detaylı Analiz:</strong>
-                          <div style={{ 
-                            padding: '12px', 
-                            backgroundColor: '#1f2937', 
-                            borderRadius: '6px',
-                            fontFamily: 'monospace',
-                            fontSize: '11px'
-                          }}>
-                            {item.explanation.split('\n').map((line: string, idx: number) => (
-                              <div key={idx} style={{ marginBottom: line.trim() ? '4px' : '8px' }}>
-                                {line}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ) : (
-                        <span style={{ cursor: 'help' }} title="Detaylı analiz için üzerine gelin">
-                          {item.explanation.split('\n')[0] || 'Analiz için üzerine gelin'}...
-                        </span>
-                      )}
+                    ))}
+                  </tr>
+
+                  {/* Yüzeysel tahmin (%, maç sayısı) */}
+                  <tr style={{ borderBottom: '1px solid #374151' }}>
+                    <td style={{ padding: '12px', fontWeight: 600, color: '#60a5fa' }}>
+                      Yüzeysel Tahmin (%)
                     </td>
-                    </tr>
-                  ))}
+                    {analysisResult.analysis.map((item, idx) => {
+                      const hasData = item.superficial.total > 0
+                      return (
+                        <td key={idx} style={{ padding: '12px', textAlign: 'center' }}>
+                          {hasData ? (
+                            <div>
+                              <div style={{ fontSize: '18px', fontWeight: 'bold' }}>
+                                {item.superficial.rate.toFixed(2)}%
+                              </div>
+                              <div style={{ fontSize: '10px', color: '#9ca3af', marginTop: '4px' }}>
+                                {item.superficial.total} maç ({item.oddRange})
+                              </div>
+                            </div>
+                          ) : (
+                            <span style={{ color: '#6b7280' }}>Veri yok</span>
+                          )}
+                        </td>
+                      )
+                    })}
+                  </tr>
+
+                  {/* Derinlemesine tahmin (%, maç sayısı) */}
+                  <tr style={{ borderBottom: '1px solid #374151' }}>
+                    <td style={{ padding: '12px', fontWeight: 600, color: '#34d399' }}>
+                      Derinlemesine Tahmin (%)
+                    </td>
+                    {analysisResult.analysis.map((item, idx) => {
+                      const hasData = item.deep && item.deep.total > 0
+                      return (
+                        <td key={idx} style={{ padding: '12px', textAlign: 'center' }}>
+                          {hasData && item.deep ? (
+                            <div>
+                              <div style={{ fontSize: '18px', fontWeight: 'bold' }}>
+                                {item.deep.rate.toFixed(2)}%
+                              </div>
+                              <div style={{ fontSize: '10px', color: '#9ca3af', marginTop: '4px' }}>
+                                {item.deep.total} maç ({item.deep.odd})
+                              </div>
+                            </div>
+                          ) : (
+                            <span style={{ color: '#6b7280' }}>Veri yok</span>
+                          )}
+                        </td>
+                      )
+                    })}
+                  </tr>
+
+                  {/* Genel oran (yüzeysel + derinlemesine ortalaması) */}
+                  <tr style={{ borderBottom: '1px solid #374151' }}>
+                    <td style={{ padding: '12px', fontWeight: 600, color: '#fbbf24' }}>
+                      Genel Oran (%)
+                    </td>
+                    {analysisResult.analysis.map((item, idx) => {
+                      const hasSuperficialData = item.superficial.total > 0
+                      const hasDeepData = item.deep && item.deep.total > 0
+                      const rateParts: number[] = []
+                      if (hasSuperficialData) rateParts.push(item.superficial.rate)
+                      if (hasDeepData && item.deep) rateParts.push(item.deep.rate)
+                      const combinedRate =
+                        rateParts.length > 0
+                          ? rateParts.reduce((sum, v) => sum + v, 0) / rateParts.length
+                          : 0
+
+                      return (
+                        <td key={idx} style={{ padding: '12px', textAlign: 'center' }}>
+                          {rateParts.length > 0 ? (
+                            <span style={{ fontSize: '18px', fontWeight: 'bold' }}>
+                              {combinedRate.toFixed(2)}%
+                            </span>
+                          ) : (
+                            <span style={{ color: '#6b7280' }}>Veri yok</span>
+                          )}
+                        </td>
+                      )
+                    })}
+                  </tr>
                 </tbody>
               </table>
+
+              {/* Kısa açıklama satırı: her bahis için ilk cümle */}
+              <div style={{ marginTop: '16px', fontSize: '12px', color: '#9ca3af' }}>
+                {analysisResult.analysis.map((item, idx) => (
+                  <div key={idx} style={{ marginBottom: '4px' }}>
+                    <strong style={{ color: '#e5e7eb' }}>{item.betType}:</strong>{' '}
+                    {item.explanation.split('\n')[0] || ''}
+                  </div>
+                ))}
+              </div>
             </div>
           ) : (
             <div style={{ padding: '24px', textAlign: 'center', color: '#9ca3af' }}>

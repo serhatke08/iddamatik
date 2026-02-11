@@ -259,8 +259,13 @@ export const csvService = {
         // Lig ismini normalize et - ülke bilgisini kullan
         let league = leagueRaw
         if (country && leagueRaw) {
+          // Avrupa kupaları: isim sabit kalsın
+          if (leagueRaw === 'Europa League') {
+            league = 'Europa League'
+          } else if (leagueRaw === 'Champions League' && country === 'Europe') {
+            league = 'Champions League' // Europe Champions League -> Champions League
           // Aynı lig ismi farklı ülkelerde varsa ülke bilgisini ekle
-          if (leagueRaw === 'Premier League') {
+          } else if (leagueRaw === 'Premier League') {
             if (country === 'Russia') {
               league = 'Russia Premier League'
             } else if (country === 'England') {
@@ -276,8 +281,6 @@ export const csvService = {
             } else {
               league = leagueRaw === 'Serie A Betano' ? 'Brazil Serie A' : `${country} ${leagueRaw}`
             }
-          } else if (leagueRaw === 'Champions League' && country === 'Europe') {
-            league = 'Champions League' // Europe Champions League -> Champions League
           } else if (leagueRaw === 'A-League' && country === 'Australia') {
             league = 'A-League' // Australia A-League -> A-League
           } else if (leagueRaw === 'MLS' && country === 'USA') {
@@ -359,8 +362,13 @@ export const csvService = {
           // Lig ismini normalize et - ülke bilgisini kullan
           let league = leagueRaw
           if (country && leagueRaw) {
+            // Avrupa kupaları: isim sabit
+            if (leagueRaw === 'Europa League') {
+              league = 'Europa League'
+            } else if (leagueRaw === 'Champions League' && country === 'Europe') {
+              league = 'Champions League'
             // Aynı lig ismi farklı ülkelerde varsa ülke bilgisini ekle
-            if (leagueRaw === 'Premier League') {
+            } else if (leagueRaw === 'Premier League') {
               if (country === 'Russia') {
                 league = 'Russia Premier League'
               } else if (country === 'England') {
@@ -376,8 +384,6 @@ export const csvService = {
             } else {
               league = leagueRaw === 'Serie A Betano' ? 'Brazil Serie A' : `${country} ${leagueRaw}`
             }
-            } else if (leagueRaw === 'Champions League' && country === 'Europe') {
-              league = 'Champions League' // Europe Champions League -> Champions League
             } else if (leagueRaw === 'A-League' && country === 'Australia') {
               league = 'A-League' // Australia A-League -> A-League
             } else if (leagueRaw === 'MLS' && country === 'USA') {

@@ -80,7 +80,7 @@ const formatLeagueName = (leagueName: string): string => {
 }
 
 // Lig isimlerini logolarla eşleştir
-const getLeagueLogo = (leagueName: string): string | null => {
+  const getLeagueLogo = (leagueName: string): string | null => {
   const leagueLogoMap: Record<string, string> = {
     'Premier League': '/images/leagues/premier-league-1.svg',
     'Ligue 1': '/images/leagues/Ligue1_logo.png',
@@ -94,6 +94,7 @@ const getLeagueLogo = (leagueName: string): string | null => {
     'Liga Portugal': '/images/leagues/liga-portugal-logo-png.png',
     'Champions League': '/images/leagues/uefa-champions-league-1.svg',
     'UEFA Champions League': '/images/leagues/uefa-champions-league-1.svg',
+    'Europa League': '/images/leagues/avrupaligi.png',
     'Premiership': '/images/leagues/scottish-premiership.png',
     'Scottish Premiership': '/images/leagues/scottish-premiership.png',
     'MLS': '/images/leagues/major-league-soccer-symbol.png',
@@ -552,11 +553,19 @@ export default function Home() {
       {/* Navbar */}
       <nav className="navbar">
         <div className="navbar-content">
-          <h1>⚽ İddaa Analiz Platformu</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <img
+              src="/logo.png"
+              alt="İddaamatik logo"
+              style={{ height: '32px', width: '32px', objectFit: 'contain' }}
+            />
+            <h1>İddaa Analiz Platformu</h1>
+          </div>
           <nav>
             <a href="/">Ana Sayfa</a>
             <a href="/odds">Oranlar</a>
             <a href="/analysis-robot">Analiz Robotu</a>
+            <a href="/stats">İstatistik</a>
           </nav>
         </div>
       </nav>
@@ -587,6 +596,7 @@ export default function Home() {
               ) : (
                 <>
                   <option value="Champions League">Europe — Champions League</option>
+                  <option value="Europa League">Europe — Europa League</option>
                   <option value="Premier League">England — Premier League</option>
                   <option value="Russia Premier League">Russia — Premier League</option>
                   <option value="La Liga">Spain — LaLiga</option>

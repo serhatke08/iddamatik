@@ -4,6 +4,9 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'İddaa Analiz Platformu',
   description: 'Futbol maçları ve oranlarını analiz edin',
+  icons: {
+    icon: '/logo.png',
+  },
 }
 
 export default function RootLayout({

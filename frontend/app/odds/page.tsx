@@ -5,11 +5,19 @@ export default function OddsInfoPage() {
     <div className="container">
       <nav className="navbar">
         <div className="navbar-content">
-          <h1>⚽ İddaa Analiz Platformu</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <img
+              src="/logo.png"
+              alt="İddaamatik logo"
+              style={{ height: '32px', width: '32px', objectFit: 'contain' }}
+            />
+            <h1>İddaa Analiz Platformu</h1>
+          </div>
           <nav>
             <a href="/">Ana Sayfa</a>
             <a href="/odds">Oranlar</a>
             <a href="/analysis-robot">Analiz Robotu</a>
+            <a href="/stats">İstatistik</a>
           </nav>
         </div>
       </nav>

@@ -21,10 +21,12 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     if (!data) {
       const iddaaMatch = iddaaService.getMatchById(id)
       if (iddaaMatch) {
+        // CSV'den değil canlı bültenden geldiği için tipte eksik alanlar olabilir;
+        // bu yüzden burada esnek davranıp any olarak işliyoruz.
         data = {
-          match: iddaaMatch,
-          stats: csvService.getOddsStatsForOdds(iddaaMatch.odds || {})
-        }
+          match: iddaaMatch as any,
+          stats: csvService.getOddsStatsForOdds((iddaaMatch as any).odds || {})
+        } as any
       }
     }
 

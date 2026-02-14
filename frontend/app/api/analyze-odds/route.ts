@@ -179,33 +179,25 @@ const aggregateDataWithTolerance = (detailedData: any, betType: string, targetOd
     (targetOdd + 0.01).toFixed(2)
   ]
   
+  // Her lig için sadece bir kez saymak için kullanılan set
+  const processedOdds = new Set<string>()
+  
   Object.values(detailedData.hierarchical).forEach((league: any) => {
     const bet = league?.[betType]
     if (!bet?.odds) return
     
-    // Detaylı JSON'da oranlar tam sayı formatında (örn: "2.13") veya aralık formatında olabilir
+    // Detaylı JSON'da oranlar genellikle tam sayı formatında (örn: "2.13")
+    // Önce tam eşleşme ara
     oddVariants.forEach(oddStr => {
-      // Tam eşleşme ara
       const exactMatch = bet.odds[oddStr]
       if (exactMatch) {
-        total += exactMatch.total || 0
-        hit += exactMatch.hit || 0
-      }
-      
-      // Aralık formatında da ara (örn: "2.1-2.2" içinde 2.13 varsa)
-      Object.keys(bet.odds).forEach(rangeKey => {
-        if (rangeKey.includes('-')) {
-          const [lower, upper] = rangeKey.split('-').map(Number)
-          const oddValue = parseFloat(oddStr)
-          if (oddValue >= lower && oddValue <= upper) {
-            const rangeData = bet.odds[rangeKey]
-            if (rangeData) {
-              total += rangeData.total || 0
-              hit += rangeData.hit || 0
-            }
-          }
+        const key = `${league}-${oddStr}`
+        if (!processedOdds.has(key)) {
+          total += exactMatch.total || 0
+          hit += exactMatch.hit || 0
+          processedOdds.add(key)
         }
-      })
+      }
     })
   })
   

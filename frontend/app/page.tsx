@@ -203,12 +203,26 @@ export default function Home() {
     }))
   }
 
+  // Debounce ile filtreleme - sadece kullanıcı yazmayı bıraktığında çalış
   useEffect(() => {
+    // Eğer hiçbir filtre yoksa, arama yapma
+    const hasFilters = leagueFilter.trim() || matchFilter.trim() || scoreFilter.trim() || 
+                      kgFilter.trim() || altFilter.trim() || ustFilter.trim() || iyFilter.trim() ||
+                      Object.values(oddsFilters).some(v => v && v.trim())
+    
+    if (!hasFilters) {
+      setHasSearched(false)
+      setMatches([])
+      setTotalCount(0)
+      return
+    }
+
     const timer = setTimeout(() => {
       runFilterSearch()
-    }, 300)
+    }, 1000) // 1 saniye debounce
+    
     return () => clearTimeout(timer)
-  }, [runFilterSearch])
+  }, [leagueFilter, matchFilter, scoreFilter, kgFilter, altFilter, ustFilter, iyFilter, oddsFilters, tolerancePlus, toleranceMinus, runFilterSearch])
 
   useEffect(() => {
     const saved = sessionStorage.getItem('idaa_home_scroll')
@@ -217,6 +231,51 @@ export default function Home() {
       if (!Number.isNaN(y)) {
         window.scrollTo(0, y)
       }
+    }
+  }, [])
+
+  // AdSense reklamlarını yükle
+  useEffect(() => {
+    const initAds = () => {
+      try {
+        if (typeof window !== 'undefined') {
+          const adsbygoogle = (window as any).adsbygoogle
+          if (adsbygoogle && adsbygoogle.loaded) {
+            // Script yüklendiyse reklamları initialize et
+            const adElements = document.querySelectorAll('.adsbygoogle:not([data-adsbygoogle-status])')
+            if (adElements.length > 0) {
+              adsbygoogle.push({})
+              adsbygoogle.push({})
+            }
+          } else if (adsbygoogle) {
+            // Script yükleniyor, bekle
+            adsbygoogle.push({})
+            adsbygoogle.push({})
+          }
+        }
+      } catch (e: any) {
+        // Hata mesajını sadece gerçekten önemliyse göster
+        if (!e?.message?.includes('already have ads')) {
+          console.error('AdSense yükleme hatası:', e)
+        }
+      }
+    }
+
+    // DOM hazır olduktan sonra ve script yüklendikten sonra initialize et
+    if (typeof window !== 'undefined') {
+      // İlk deneme
+      setTimeout(initAds, 500)
+      
+      // Script yüklenene kadar kontrol et
+      const checkInterval = setInterval(() => {
+        if ((window as any).adsbygoogle) {
+          initAds()
+          clearInterval(checkInterval)
+        }
+      }, 200)
+      
+      // 15 saniye sonra timeout
+      setTimeout(() => clearInterval(checkInterval), 15000)
     }
   }, [])
 
@@ -379,8 +438,26 @@ export default function Home() {
   }
 
   const getMs1Stats = () => {
-    const raw = oddsFilters.ms1?.trim()
-    const parsed = raw ? Number(raw.replace(',', '.')) : null
+    // MS1, MSX veya MS2'den herhangi biri varsa çalış
+    const ms1Raw = oddsFilters.ms1?.trim()
+    const msxRaw = oddsFilters.msx?.trim()
+    const ms2Raw = oddsFilters.ms2?.trim()
+    
+    const ms1Parsed = ms1Raw ? Number(ms1Raw.replace(',', '.')) : null
+    const msxParsed = msxRaw ? Number(msxRaw.replace(',', '.')) : null
+    const ms2Parsed = ms2Raw ? Number(ms2Raw.replace(',', '.')) : null
+    
+    // Hangi filtreler aktif?
+    const activeFilters: string[] = []
+    if (ms1Parsed !== null && !Number.isNaN(ms1Parsed)) activeFilters.push(`MS1 ${ms1Parsed.toFixed(2)}`)
+    if (msxParsed !== null && !Number.isNaN(msxParsed)) activeFilters.push(`MSX ${msxParsed.toFixed(2)}`)
+    if (ms2Parsed !== null && !Number.isNaN(ms2Parsed)) activeFilters.push(`MS2 ${ms2Parsed.toFixed(2)}`)
+    
+    // Hiçbiri yoksa null dön
+    if (activeFilters.length === 0) return null
+    
+    // İlk aktif filtreyi kullan (başlık için)
+    const parsed = ms1Parsed ?? msxParsed ?? ms2Parsed
 
     let total = 0
     let withResult = 0
@@ -554,6 +631,7 @@ export default function Home() {
 
     return {
       odd: parsed !== null && !Number.isNaN(parsed) ? parsed.toFixed(2) : null,
+      activeFilters: activeFilters, // Aktif filtreler listesi
       total,
       totalLeagues: leagueSet.size,
       hit: ms1Hit,
@@ -1078,6 +1156,21 @@ export default function Home() {
   }
 
   return (
+    <div className="main-layout">
+      {/* Sol Reklam - Desktop Only */}
+      <div className="ad-left">
+        <ins 
+          className="adsbygoogle"
+          style={{ display: 'block', minHeight: '250px' }}
+          data-ad-client="ca-pub-6962376212093267"
+          data-ad-slot="2661289799"
+          data-ad-format="auto"
+          data-full-width-responsive="true"
+        />
+      </div>
+
+      {/* Ana İçerik */}
+      <div className="main-content">
     <div className="container">
       {/* Navbar */}
       <nav className="navbar">
@@ -1105,7 +1198,7 @@ export default function Home() {
       </nav>
 
       {/* Banner Reklam Alanı - Boşluk */}
-      <div style={{ height: '100px', width: '100%' }}></div>
+      <div className="banner-space" style={{ height: '100px', width: '100%' }}></div>
 
       {/* Filter Section */}
       <div className="search-section">
@@ -1924,7 +2017,7 @@ export default function Home() {
             style={{
               display: 'flex',
               flexWrap: 'nowrap',
-              gap: '8px',
+              gap: '6px',
               overflowX: 'auto'
             }}
           >
@@ -1947,14 +2040,14 @@ export default function Home() {
                   flexDirection: 'column',
                   alignItems: 'center',
                   gap: '1px',
-                  padding: '4px 6px',
-                  borderRadius: '6px',
+                  padding: '3px 5px',
+                  borderRadius: '5px',
                   backgroundColor: '#020617',
-                  minWidth: '95px'
+                  minWidth: '80px'
                 }}
               >
-                <div style={{ fontWeight: 600 }}>{item.bahis}</div>
-                <div style={{ fontSize: '9px', lineHeight: 1.1, color: '#9ca3af', textAlign: 'center' }}>
+                <div style={{ fontWeight: 600, fontSize: '10px' }}>{item.bahis}</div>
+                <div style={{ fontSize: '8px', lineHeight: 1.1, color: '#9ca3af', textAlign: 'center' }}>
                   {item.aciklama}
                 </div>
                 <input
@@ -1962,11 +2055,12 @@ export default function Home() {
                   placeholder=""
                   value={(oddsFilters as any)[item.key] || ''}
                   onChange={(e) => updateOddsFilter(item.key as keyof OddsFilters, e.target.value)}
+                  style={{ padding: '3px', fontSize: '10px' }}
                 />
-                <div style={{ display: 'flex', gap: '2px', marginTop: '4px', width: '100%' }}>
+                <div style={{ display: 'flex', gap: '2px', marginTop: '3px', width: '100%' }}>
                   <select
                     className="search-input compact"
-                    style={{ width: '50%', padding: '4px', fontSize: '10px' }}
+                    style={{ width: '50%', padding: '3px', fontSize: '9px' }}
                     value={tolerancePlus[item.key] ?? 0}
                     onChange={(e) => setTolerancePlus(prev => ({ ...prev, [item.key]: Number(e.target.value) }))}
                     title="Üst tolerans"
@@ -1975,7 +2069,7 @@ export default function Home() {
                   </select>
                   <select
                     className="search-input compact"
-                    style={{ width: '50%', padding: '4px', fontSize: '10px' }}
+                    style={{ width: '50%', padding: '3px', fontSize: '9px' }}
                     value={toleranceMinus[item.key] ?? 0}
                     onChange={(e) => setToleranceMinus(prev => ({ ...prev, [item.key]: Number(e.target.value) }))}
                     title="Alt tolerans"
@@ -2130,7 +2224,11 @@ export default function Home() {
                     }}
                   >
                     <div style={{ fontSize: '12px', fontWeight: 600 }}>
-                      {s.odd ? (
+                      {s.activeFilters && s.activeFilters.length > 0 ? (
+                        <>
+                          {s.activeFilters.join(', ')} <span style={{ color: '#facc15' }}>oranları</span>
+                        </>
+                      ) : s.odd ? (
                         <>
                           MS1 <span style={{ color: '#facc15' }}>{s.odd}</span> oranı
                         </>
@@ -2162,12 +2260,6 @@ export default function Home() {
                         <strong>{formatInt(s.ms1Hit)}</strong> ({s.ms1HitRate}%)
                       </span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
-                      <span>Yatmış</span>
-                      <span>
-                        <strong>{formatInt(s.ms1Miss)}</strong> ({s.ms1MissRate}%)
-                      </span>
-                    </div>
                   </div>
 
                   {/* MSX kartı */}
@@ -2187,12 +2279,6 @@ export default function Home() {
                       <span>Tutmuş</span>
                       <span>
                         <strong>{formatInt(s.msxHit)}</strong> ({s.msxHitRate}%)
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
-                      <span>Yatmış</span>
-                      <span>
-                        <strong>{formatInt(s.msxMiss)}</strong> ({s.msxMissRate}%)
                       </span>
                     </div>
                   </div>
@@ -2216,14 +2302,8 @@ export default function Home() {
                         <strong>{formatInt(s.ms2Hit)}</strong> ({s.ms2HitRate}%)
                       </span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
-                      <span>Yatmış</span>
-                      <span>
-                        <strong>{formatInt(s.ms2Miss)}</strong> ({s.ms2MissRate}%)
-                      </span>
                     </div>
-                  </div>
-                </div>
+                    </div>
 
                 {/* Alt satır: Goller ve KG */}
                 <div
@@ -3111,6 +3191,20 @@ export default function Home() {
           </table>
         </div>
       )}
+        </div>
+      </div>
+
+      {/* Sağ Reklam - Desktop Only */}
+      <div className="ad-right">
+        <ins 
+          className="adsbygoogle"
+          style={{ display: 'block', minHeight: '250px' }}
+          data-ad-client="ca-pub-6962376212093267"
+          data-ad-slot="2661289799"
+          data-ad-format="auto"
+          data-full-width-responsive="true"
+        />
+      </div>
     </div>
   )
 }

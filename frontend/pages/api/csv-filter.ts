@@ -60,7 +60,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     const limit = parseNumber(limitParam ?? undefined)
-    const effectiveLimit = limit ?? csvService.loadAll().length
+    // Limit yoksa tüm sonuçları döndür (limit undefined olarak gönder)
 
     const matches = csvService.filterMatches({
       league,
@@ -76,7 +76,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       odds_filters: Object.keys(oddsFilters).length ? oddsFilters : null,
       tolerance_plus: Object.keys(tolerancePlus).length ? tolerancePlus : null,
       tolerance_minus: Object.keys(toleranceMinus).length ? toleranceMinus : null,
-      limit: effectiveLimit
+      limit: limit ?? undefined // Limit yoksa undefined gönder, tüm sonuçlar dönsün
     })
 
     res.status(200).json(matches)

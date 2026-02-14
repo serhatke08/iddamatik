@@ -477,3 +477,325 @@ body {
     grid-template-columns: repeat(2, minmax(120px, 1fr));
   }
 }
+
+/* Main Layout - Responsive */
+.main-layout {
+  display: flex;
+  gap: 20px;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.main-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.ad-left,
+.ad-right {
+  width: 160px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 20px;
+  height: fit-content;
+}
+
+/* Tablet (768px - 1024px) */
+@media (max-width: 1024px) {
+  .main-layout {
+    padding: 15px;
+    gap: 15px;
+  }
+
+  .ad-left,
+  .ad-right {
+    width: 120px;
+  }
+
+  .container {
+    padding: 15px;
+  }
+}
+
+/* Mobile (max 768px) */
+@media (max-width: 768px) {
+  .main-layout {
+    flex-direction: column;
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .ad-left,
+  .ad-right {
+    display: none; /* Mobilde yan reklamları gizle */
+  }
+
+  .container {
+    padding: 8px;
+    max-width: 100%;
+  }
+
+  .navbar {
+    padding: 12px 0;
+    margin-bottom: 15px;
+  }
+
+  .navbar-content {
+    flex-direction: column;
+    gap: 12px;
+    padding: 0 12px;
+  }
+
+  .navbar h1 {
+    font-size: 1.3rem;
+  }
+
+  .navbar nav {
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  .navbar nav a {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+
+  .search-section {
+    padding: 12px;
+    border-radius: 10px;
+  }
+
+  .filter-row {
+    grid-template-columns: 1fr !important;
+    gap: 8px;
+    font-size: 10px;
+  }
+
+  .filter-cell {
+    width: 100%;
+  }
+
+  .filter-label {
+    font-size: 10px;
+    margin-bottom: 4px;
+  }
+
+  .search-input,
+  .filter-input-short {
+    font-size: 12px !important;
+    padding: 6px 8px !important;
+  }
+
+  .matches-table {
+    font-size: 9px;
+    overflow-x: auto;
+    display: block;
+  }
+
+  .matches-table th,
+  .matches-table td {
+    padding: 4px 3px;
+    white-space: nowrap;
+    font-size: 9px;
+  }
+
+  .matches-table th {
+    font-size: 9px;
+    padding: 6px 3px;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+
+  /* Banner boşluğu küçült */
+  .banner-space {
+    height: 60px !important;
+  }
+
+  /* Tüm içerikleri küçült */
+  h1, h2, h3 {
+    font-size: 1.2rem !important;
+  }
+
+  /* İstatistik kutuları ve genel padding'leri küçült */
+  .search-section > div {
+    font-size: 10px !important;
+  }
+
+  /* Grid kutuları küçült */
+  div[style*="gridTemplateColumns"] {
+    gap: 6px !important;
+  }
+
+  /* Font boyutlarını küçült - spesifik elementler */
+  body {
+    font-size: 13px !important;
+  }
+
+  /* Özel durumlar */
+  .filter-label {
+    font-size: 10px !important;
+  }
+
+  .search-input,
+  .filter-input-short {
+    font-size: 11px !important;
+  }
+
+  /* İstatistik kutuları */
+  div[style*="fontSize: '12px'"] {
+    font-size: 10px !important;
+  }
+
+  div[style*="fontSize: '11px'"] {
+    font-size: 9px !important;
+  }
+
+  div[style*="fontSize: '10px'"] {
+    font-size: 8px !important;
+  }
+
+  /* Padding'leri küçült */
+  div[style*="padding: '12px'"],
+  div[style*="padding: '16px'"] {
+    padding: 8px !important;
+  }
+
+  div[style*="padding: '8px'"] {
+    padding: 6px !important;
+  }
+}
+
+/* Small Mobile (max 480px) */
+@media (max-width: 480px) {
+  .main-layout {
+    padding: 5px;
+  }
+
+  .container {
+    padding: 5px;
+  }
+
+  .navbar {
+    padding: 10px 0;
+    margin-bottom: 12px;
+  }
+
+  .navbar h1 {
+    font-size: 1.1rem;
+  }
+
+  .navbar-content {
+    padding: 0 10px;
+    gap: 10px;
+  }
+
+  .navbar nav a {
+    font-size: 11px;
+    padding: 5px 8px;
+  }
+
+  .search-section {
+    padding: 10px;
+    border-radius: 8px;
+  }
+
+  .filter-row {
+    gap: 6px;
+    font-size: 9px;
+  }
+
+  .filter-label {
+    font-size: 9px;
+  }
+
+  .search-input,
+  .filter-input-short {
+    font-size: 11px !important;
+    padding: 5px 6px !important;
+  }
+
+  .matches-table {
+    font-size: 8px;
+  }
+
+  .matches-table th,
+  .matches-table td {
+    padding: 3px 2px;
+    font-size: 8px;
+  }
+
+  .matches-table th {
+    font-size: 8px;
+    padding: 5px 2px;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+
+  /* Banner boşluğu daha da küçült */
+  .banner-space {
+    height: 50px !important;
+  }
+
+  /* Tüm içerikleri daha da küçült */
+  h1, h2, h3 {
+    font-size: 1rem !important;
+  }
+
+  /* İstatistik kutuları ve genel padding'leri küçült */
+  .search-section > div {
+    font-size: 9px !important;
+  }
+
+  /* Grid kutuları küçült */
+  div[style*="gridTemplateColumns"] {
+    gap: 4px !important;
+  }
+
+  /* Font boyutlarını daha da küçült */
+  body {
+    font-size: 12px !important;
+  }
+
+  /* Özel durumlar */
+  .filter-label {
+    font-size: 9px !important;
+  }
+
+  .search-input,
+  .filter-input-short {
+    font-size: 10px !important;
+  }
+
+  /* İstatistik kutuları */
+  div[style*="fontSize: '12px'"] {
+    font-size: 9px !important;
+  }
+
+  div[style*="fontSize: '11px'"] {
+    font-size: 8px !important;
+  }
+
+  div[style*="fontSize: '10px'"] {
+    font-size: 7px !important;
+  }
+
+  /* Padding'leri küçült */
+  div[style*="padding: '12px'"],
+  div[style*="padding: '16px'"] {
+    padding: 6px !important;
+  }
+
+  div[style*="padding: '8px'"] {
+    padding: 5px !important;
+  }
+}

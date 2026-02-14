@@ -443,7 +443,7 @@ export const csvService = {
       tolerance = 0.01,
       tolerance_plus,
       tolerance_minus,
-      limit = 1000
+      limit
     } = params
 
     const data = this.loadAll()
@@ -595,7 +595,8 @@ export const csvService = {
       }
 
       results.push(m)
-      if (results.length >= limit) break
+      // Limit varsa ve limit'e ulaşıldıysa dur
+      if (limit && limit > 0 && results.length >= limit) break
     }
 
     return results

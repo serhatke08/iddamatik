@@ -161,14 +161,21 @@ export default function AnalysisRobotPage() {
   }
 
   const analyzeCoupon = async () => {
-    if (matches.length === 0) return
+    if (matches.length === 0) {
+      alert('Analiz edilecek maç bulunamadı. Önce maçları yükleyin.')
+      return
+    }
     
     setAnalyzingCoupon(true)
     setCouponPredictions([])
     
     const predictions: CouponPrediction[] = []
+    let analyzedCount = 0
+    let errorCount = 0
     
     try {
+      console.log(`Starting coupon analysis for ${matches.length} matches...`)
+      
       // Tüm maçları sırayla analiz et
       for (let i = 0; i < matches.length; i++) {
         const match = matches[i]
@@ -182,24 +189,32 @@ export default function AnalysisRobotPage() {
             }
           })
           
-          if (Object.keys(cleanOdds).length === 0) continue
+          if (Object.keys(cleanOdds).length === 0) {
+            console.log(`Skipping match ${match.match_id}: No valid odds`)
+            continue
+          }
+          
+          // MS1, MSX, MS2 kontrolü
+          if (!cleanOdds.H || !cleanOdds.D || !cleanOdds.A) {
+            console.log(`Skipping match ${match.match_id}: Missing MS1/MSX/MS2 odds`)
+            continue
+          }
           
           // Analiz yap
           const response = await axios.post('/api/analyze-odds', {
             odds: cleanOdds
           })
           
-          if (response.data && response.data.generalAnalysis) {
-            const analysis = response.data.generalAnalysis
-            const pool = analysis.pool
+          if (response.data && response.data.generalAnalysis && response.data.generalAnalysis.pool) {
+            const pool = response.data.generalAnalysis.pool
             
             // En yüksek tutma oranını bul
             const rates = [
-              { type: 'MS1', label: 'MS1', rate: pool.ms1Rate },
-              { type: 'MSX', label: 'MSX', rate: pool.msxRate },
-              { type: 'MS2', label: 'MS2', rate: pool.ms2Rate },
-              { type: 'KG_VAR', label: 'KG VAR', rate: pool.kgVar },
-              { type: 'KG_YOK', label: 'KG YOK', rate: pool.kgYok }
+              { type: 'MS1', label: 'MS1', rate: pool.ms1Rate || 0 },
+              { type: 'MSX', label: 'MSX', rate: pool.msxRate || 0 },
+              { type: 'MS2', label: 'MS2', rate: pool.ms2Rate || 0 },
+              { type: 'KG_VAR', label: 'KG VAR', rate: pool.kgVar || 0 },
+              { type: 'KG_YOK', label: 'KG YOK', rate: pool.kgYok || 0 }
             ]
             
             // Oranları sırala
@@ -225,20 +240,44 @@ export default function AnalysisRobotPage() {
                 recommendation
               })
             }
+            
+            analyzedCount++
+          } else {
+            console.error(`Invalid response for match ${match.match_id}:`, response.data)
+            errorCount++
           }
-        } catch (error) {
+        } catch (error: any) {
           console.error(`Error analyzing match ${match.match_id}:`, error)
+          errorCount++
           // Hata olsa bile devam et
+        }
+        
+        // Her 10 maçta bir progress göster
+        if ((i + 1) % 10 === 0) {
+          console.log(`Progress: ${i + 1}/${matches.length} matches analyzed`)
         }
       }
       
       // Oranları yüksekten düşüğe sırala
       predictions.sort((a, b) => b.rate - a.rate)
       
-      setCouponPredictions(predictions)
-    } catch (error) {
+      console.log(`Coupon analysis complete: ${analyzedCount} analyzed, ${errorCount} errors, ${predictions.length} predictions found`)
+      
+      if (predictions.length === 0) {
+        alert(`Analiz tamamlandı. ${analyzedCount} maç analiz edildi ancak %70+ tutma oranına sahip maç bulunamadı.`)
+      } else {
+        setCouponPredictions(predictions)
+        // Sonuçlara scroll et
+        setTimeout(() => {
+          const element = document.querySelector('[data-coupon-predictions]')
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }
+        }, 100)
+      }
+    } catch (error: any) {
       console.error('Error analyzing coupon:', error)
-      alert('Kupon analizi sırasında bir hata oluştu.')
+      alert(`Kupon analizi sırasında bir hata oluştu: ${error.message || 'Bilinmeyen hata'}`)
     } finally {
       setAnalyzingCoupon(false)
     }
@@ -404,7 +443,7 @@ export default function AnalysisRobotPage() {
 
       {/* Kupon Tahminleri */}
       {couponPredictions.length > 0 && (
-        <div style={{ marginTop: '24px', padding: '20px', backgroundColor: '#111827', borderRadius: '8px', border: '2px solid #10b981' }}>
+        <div data-coupon-predictions style={{ marginTop: '24px', padding: '20px', backgroundColor: '#111827', borderRadius: '8px', border: '2px solid #10b981' }}>
           <h3 style={{ marginBottom: '16px', color: '#10b981', fontSize: '20px', fontWeight: 600 }}>
             🎯 Kupon Tahminleri (%70+ Tutma Oranı)
           </h3>

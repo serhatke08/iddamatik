@@ -452,7 +452,7 @@ export default function AnalysisRobotPage() {
           {/* Derinlemesine Analiz Tablosu */}
           <div style={{ marginBottom: '32px' }}>
             <h4 style={{ marginBottom: '16px', color: '#34d399', fontSize: '18px', fontWeight: 600 }}>
-              2️⃣ Derinlemesine Analiz (Net Oranlar - Birebir Eşleşme)
+              2️⃣ Derinlemesine Analiz (Net Oranlar - ±0.01 Tolerans)
             </h4>
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', backgroundColor: '#1f2937', borderRadius: '8px' }}>

@@ -32,6 +32,8 @@ Thumbs.db
 
 # Data
 data/
+# Frontend lib/data klasörünü dahil et (Vercel için gerekli)
+!frontend/lib/data/
 *.db
 *.sqlite
 

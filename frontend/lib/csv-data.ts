@@ -47,12 +47,25 @@ type FilterParams = {
 const CSV_DATE_FORMATS = ['dd-MM-yy HH:mm', 'dd-MM-yyyy HH:mm']
 const GOAL_LINES = [0.5, 1.5, 2.5, 3.5, 4.5]
 
-const defaultDataRoot = path.resolve(process.cwd(), '..', 'data')
+// Vercel'de çalışması için lib/data klasörünü kullan
+// Eğer lib/data yoksa, fallback olarak ../data kullan
+const defaultDataRoot = path.resolve(process.cwd(), 'lib', 'data')
+const fallbackDataRoot = path.resolve(process.cwd(), '..', 'data')
 
-const ODDS_DIR = path.join(defaultDataRoot, 'oddss')
-const SCORES_DIR = path.join(defaultDataRoot, 'scores')
-const LEGACY_RAW_DIR = path.join(defaultDataRoot, 'raw')
-const LEGACY_OVERVIEW_DIR = path.join(defaultDataRoot, 'football-data')
+const getDataDir = (subdir: string) => {
+  const primaryPath = path.join(defaultDataRoot, subdir)
+  const fallbackPath = path.join(fallbackDataRoot, subdir)
+  // Önce lib/data'yı kontrol et, yoksa ../data'yı kullan
+  if (fs.existsSync(primaryPath)) {
+    return primaryPath
+  }
+  return fallbackPath
+}
+
+const ODDS_DIR = getDataDir('oddss')
+const SCORES_DIR = getDataDir('scores')
+const LEGACY_RAW_DIR = getDataDir('raw')
+const LEGACY_OVERVIEW_DIR = getDataDir('football-data')
 
 let cache: MatchRecord[] = []
 let lastMtimes: Record<string, number> = {}

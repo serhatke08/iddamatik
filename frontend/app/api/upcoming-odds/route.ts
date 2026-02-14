@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { iddaaService } from '@/lib/iddaa-data'
-import { parse, format, isAfter, isToday, addDays } from 'date-fns'
+import { parse, format, isAfter, isToday, isBefore, startOfDay } from 'date-fns'
 
 export async function GET(request: Request) {
   try {
@@ -19,35 +19,33 @@ export async function GET(request: Request) {
         
         // Tarih ve saat kontrolü
         try {
-          const matchDate = parse(match.date || '', 'dd/MM/yyyy', new Date())
-          const isMatchToday = isToday(matchDate)
-          const isMatchFuture = isAfter(matchDate, now)
+          if (!match.date) return true // Tarih yoksa göster
           
-          // Gelecek günlerdeki maçlar: her zaman göster
-          if (isMatchFuture) return true
+          const matchDate = parse(match.date, 'dd/MM/yyyy', new Date())
+          const today = startOfDay(now)
+          const matchDay = startOfDay(matchDate)
+          
+          // Geçmiş günlerdeki maçları filtrele
+          if (isBefore(matchDay, today)) return false
           
           // Bugünkü maçlar için saat kontrolü
-          if (isMatchToday && match.time) {
+          if (isToday(matchDate) && match.time) {
             const timeParts = match.time.split(':')
             if (timeParts.length >= 2) {
               const matchHours = parseInt(timeParts[0]) || 0
               const matchMinutes = parseInt(timeParts[1]) || 0
               const matchTime = matchHours * 60 + matchMinutes
               
-              // Eğer maç saati geçmişteyse, filtrele (30 dakika tolerans - maç başlamadan önce göster)
+              // Eğer maç saati geçmişteyse, filtrele (30 dakika tolerans)
               if (matchTime < nowTime - 30) return false
             }
           }
           
-          // Bugünkü maçlar ama saat yoksa göster
-          if (isMatchToday && !match.time) return true
-          
-          // Geçmiş günlerdeki maçlar: filtrele
-          if (!isMatchToday && !isMatchFuture) return false
-          
+          // Bugün veya gelecek günlerdeki maçlar: göster
           return true
-        } catch {
-          // Parse hatası olursa, maçı dahil et (güvenli tarafta kal)
+        } catch (error) {
+          // Parse hatası olursa, maçı göster (güvenli tarafta kal)
+          console.error('Date parse error:', error, match.date)
           return true
         }
       })

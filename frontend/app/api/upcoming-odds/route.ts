@@ -11,47 +11,11 @@ export async function GET(request: Request) {
     const now = new Date()
     const nowTime = now.getHours() * 60 + now.getMinutes() // Dakika cinsinden
     
-    // Formatla ve geçmiş maçları filtrele
+    // Formatla - sadece FINISHED olanları filtrele, diğerlerini göster
     const formattedMatches = upcomingMatches
       .filter((match) => {
-        // Status kontrolü
-        if (match.status === 'FINISHED') return false
-        
-        // Tarih ve saat kontrolü
-        try {
-          if (!match.date) return true // Tarih yoksa göster
-          
-          const matchDate = parse(match.date, 'dd/MM/yyyy', new Date())
-          const today = startOfDay(now)
-          const matchDay = startOfDay(matchDate)
-          
-          // Geçmiş günlerdeki maçları filtrele (bugünden önceki günler)
-          if (isBefore(matchDay, today)) {
-            return false
-          }
-          
-          // Bugünkü maçlar için saat kontrolü
-          if (matchDay.getTime() === today.getTime() && match.time) {
-            const timeParts = match.time.split(':')
-            if (timeParts.length >= 2) {
-              const matchHours = parseInt(timeParts[0]) || 0
-              const matchMinutes = parseInt(timeParts[1]) || 0
-              const matchTime = matchHours * 60 + matchMinutes
-              
-              // Eğer maç saati geçmişteyse, filtrele (30 dakika tolerans)
-              if (matchTime < nowTime - 30) {
-                return false
-              }
-            }
-          }
-          
-          // Bugün veya gelecek günlerdeki maçlar: göster
-          return true
-        } catch (error) {
-          // Parse hatası olursa, maçı göster (güvenli tarafta kal)
-          console.error('Date parse error:', error, match.date)
-          return true
-        }
+        // Sadece FINISHED olanları filtrele
+        return match.status !== 'FINISHED'
       })
       .map((match) => {
       // Lig ismini normalize et - iddaa-scrape'den gelen formatı koru

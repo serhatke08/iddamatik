@@ -373,36 +373,58 @@ export default function AnalysisRobotPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr style={{ borderBottom: '1px solid #374151' }}>
-                    <td style={{ padding: '12px', fontWeight: 600, color: '#10b981' }}>MS1 ({analysisResult.generalAnalysis.ms1.range})</td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.ms1.total.toLocaleString()}</td>
-                    <td style={{ padding: '12px', textAlign: 'center', color: '#10b981' }}>{analysisResult.generalAnalysis.ms1.hit.toLocaleString()}</td>
-                    <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', fontSize: '16px', color: '#10b981' }}>{analysisResult.generalAnalysis.ms1.rate.toFixed(2)}%</td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.ms1.kgVar.toFixed(2)}%</td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.ms1.kgYok.toFixed(2)}%</td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.ms1.iyKgVar.toFixed(2)}%</td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.ms1.iyKgYok.toFixed(2)}%</td>
-                  </tr>
-                  <tr style={{ borderBottom: '1px solid #374151' }}>
-                    <td style={{ padding: '12px', fontWeight: 600, color: '#3b82f6' }}>MSX ({analysisResult.generalAnalysis.msx.range})</td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.msx.total.toLocaleString()}</td>
-                    <td style={{ padding: '12px', textAlign: 'center', color: '#3b82f6' }}>{analysisResult.generalAnalysis.msx.hit.toLocaleString()}</td>
-                    <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', fontSize: '16px', color: '#3b82f6' }}>{analysisResult.generalAnalysis.msx.rate.toFixed(2)}%</td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.msx.kgVar.toFixed(2)}%</td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.msx.kgYok.toFixed(2)}%</td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.msx.iyKgVar.toFixed(2)}%</td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.msx.iyKgYok.toFixed(2)}%</td>
-                  </tr>
-                  <tr style={{ borderBottom: '1px solid #374151' }}>
-                    <td style={{ padding: '12px', fontWeight: 600, color: '#ef4444' }}>MS2 ({analysisResult.generalAnalysis.ms2.range})</td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.ms2.total.toLocaleString()}</td>
-                    <td style={{ padding: '12px', textAlign: 'center', color: '#ef4444' }}>{analysisResult.generalAnalysis.ms2.hit.toLocaleString()}</td>
-                    <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', fontSize: '16px', color: '#ef4444' }}>{analysisResult.generalAnalysis.ms2.rate.toFixed(2)}%</td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.ms2.kgVar.toFixed(2)}%</td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.ms2.kgYok.toFixed(2)}%</td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.ms2.iyKgVar.toFixed(2)}%</td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.ms2.iyKgYok.toFixed(2)}%</td>
-                  </tr>
+                  {(() => {
+                    // En yüksek yüzdeyi bul
+                    const rates = {
+                      ms1: analysisResult.generalAnalysis.ms1.rate,
+                      msx: analysisResult.generalAnalysis.msx.rate,
+                      ms2: analysisResult.generalAnalysis.ms2.rate
+                    }
+                    const maxRate = Math.max(rates.ms1, rates.msx, rates.ms2)
+                    
+                    // Renkleri belirle: En yüksek yeşil, diğerleri mavi/kırmızı
+                    const getColor = (rate: number, type: 'ms1' | 'msx' | 'ms2') => {
+                      if (rate === maxRate) return '#10b981' // Yeşil - en yüksek
+                      if (type === 'ms1') return '#10b981'
+                      if (type === 'msx') return '#3b82f6'
+                      return '#ef4444'
+                    }
+                    
+                    return (
+                      <>
+                        <tr style={{ borderBottom: '1px solid #374151' }}>
+                          <td style={{ padding: '12px', fontWeight: 600, color: getColor(rates.ms1, 'ms1') }}>MS1 ({analysisResult.generalAnalysis.ms1.range})</td>
+                          <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.ms1.total.toLocaleString()}</td>
+                          <td style={{ padding: '12px', textAlign: 'center', color: getColor(rates.ms1, 'ms1') }}>{analysisResult.generalAnalysis.ms1.hit.toLocaleString()}</td>
+                          <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', fontSize: '16px', color: getColor(rates.ms1, 'ms1') }}>{analysisResult.generalAnalysis.ms1.rate.toFixed(2)}%</td>
+                          <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.ms1.kgVar.toFixed(2)}%</td>
+                          <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.ms1.kgYok.toFixed(2)}%</td>
+                          <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.ms1.iyKgVar.toFixed(2)}%</td>
+                          <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.ms1.iyKgYok.toFixed(2)}%</td>
+                        </tr>
+                        <tr style={{ borderBottom: '1px solid #374151' }}>
+                          <td style={{ padding: '12px', fontWeight: 600, color: getColor(rates.msx, 'msx') }}>MSX ({analysisResult.generalAnalysis.msx.range})</td>
+                          <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.msx.total.toLocaleString()}</td>
+                          <td style={{ padding: '12px', textAlign: 'center', color: getColor(rates.msx, 'msx') }}>{analysisResult.generalAnalysis.msx.hit.toLocaleString()}</td>
+                          <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', fontSize: '16px', color: getColor(rates.msx, 'msx') }}>{analysisResult.generalAnalysis.msx.rate.toFixed(2)}%</td>
+                          <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.msx.kgVar.toFixed(2)}%</td>
+                          <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.msx.kgYok.toFixed(2)}%</td>
+                          <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.msx.iyKgVar.toFixed(2)}%</td>
+                          <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.msx.iyKgYok.toFixed(2)}%</td>
+                        </tr>
+                        <tr style={{ borderBottom: '1px solid #374151' }}>
+                          <td style={{ padding: '12px', fontWeight: 600, color: getColor(rates.ms2, 'ms2') }}>MS2 ({analysisResult.generalAnalysis.ms2.range})</td>
+                          <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.ms2.total.toLocaleString()}</td>
+                          <td style={{ padding: '12px', textAlign: 'center', color: getColor(rates.ms2, 'ms2') }}>{analysisResult.generalAnalysis.ms2.hit.toLocaleString()}</td>
+                          <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', fontSize: '16px', color: getColor(rates.ms2, 'ms2') }}>{analysisResult.generalAnalysis.ms2.rate.toFixed(2)}%</td>
+                          <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.ms2.kgVar.toFixed(2)}%</td>
+                          <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.ms2.kgYok.toFixed(2)}%</td>
+                          <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.ms2.iyKgVar.toFixed(2)}%</td>
+                          <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.ms2.iyKgYok.toFixed(2)}%</td>
+                        </tr>
+                      </>
+                    )
+                  })()}
                 </tbody>
               </table>
             </div>

@@ -333,7 +333,15 @@ export async function POST(request: Request) {
 
       // Gruplanmış analiz (Yüzeysel) - TÜM LİGLERDEN
       const groupedOddRange = getOddRange(oddValue)
-      const groupedResult = aggregateGroupedData(groupedData, betType, groupedOddRange)
+      let groupedResult = aggregateGroupedData(groupedData, betType, groupedOddRange)
+      
+      // Eğer gruplanmış veride yoksa, detaylı veriden ±0.01 toleransla yüzeysel tahmin yap
+      if (!groupedResult) {
+        const toleranceResult = aggregateDataWithTolerance(detailedData, betType, oddValue)
+        if (toleranceResult) {
+          groupedResult = toleranceResult
+        }
+      }
 
       // Detaylı analiz (Derinlemesine) - TÜM LİGLERDEN
       const detailedResult = aggregateDetailedData(detailedData, betType, oddValue)
@@ -350,7 +358,7 @@ export async function POST(request: Request) {
           betType,
           betKey,
           odd: oddValue,
-          oddRange: groupedOddRange,
+          oddRange: groupedResult ? groupedOddRange : (detailedResult ? `${(oddValue - 0.01).toFixed(2)}-${(oddValue + 0.01).toFixed(2)}` : groupedOddRange),
           superficial: {
             total: groupedResult?.total || 0,
             hit: groupedResult?.hit || 0,

@@ -17,31 +17,58 @@ interface UpcomingMatch {
   fixture_id: number
 }
 
-interface AnalysisResult {
-  betType: string
-  betKey: string
-  odd: number
-  oddRange: string
-  superficial: {
+interface GeneralAnalysisItem {
+  range: string
+  total: number
+  hit: number
+  rate: number
+  kgVar: number
+  kgYok: number
+  iyKgVar: number
+  iyKgYok: number
+}
+
+interface GeneralAnalysis {
+  ms1: GeneralAnalysisItem
+  msx: GeneralAnalysisItem
+  ms2: GeneralAnalysisItem
+  pool: {
     total: number
-    hit: number
-    rate: number
+    ms1Rate: number
+    msxRate: number
+    ms2Rate: number
+    kgVar: number
+    kgYok: number
+    iyKgVar: number
+    iyKgYok: number
   }
-  deep: {
-    odd: string
-    total: number
-    hit: number
-    rate: number
-  } | null
-  explanation: string
+}
+
+interface DeepAnalysis {
+  total: number
+  ms1Rate: number
+  msxRate: number
+  ms2Rate: number
+  kgVar: number
+  kgYok: number
+  iyKgVar: number
+  iyKgYok: number
 }
 
 interface AnalysisResponse {
-  analysis: AnalysisResult[]
-  summary: {
-    superficialRate: number
-    deepRate: number
-    totalBets: number
+  generalAnalysis: GeneralAnalysis
+  deepAnalysis: DeepAnalysis
+  comment: {
+    dominantResult: string
+    dominantRate: number
+    isKgRisky: boolean
+    isFavored: boolean
+    recommendation: string
+  }
+  odds: {
+    ms1: number
+    msx: number
+    ms2: number
   }
 }
 
@@ -151,7 +178,7 @@ export default function AnalysisRobotPage() {
       
       console.log('Analysis response:', response.data)
       
-      if (response.data && response.data.analysis) {
+      if (response.data && (response.data.generalAnalysis || response.data.deepAnalysis)) {
         setAnalysisResult(response.data)
         // Sayfayı analiz sonuçlarına scroll et
         setTimeout(() => {
@@ -310,26 +337,190 @@ export default function AnalysisRobotPage() {
         </div>
       )}
 
-      {analysisResult && (
+      {analysisResult && analysisResult.generalAnalysis && (
         <div id="analysis-results" style={{ marginTop: '32px', padding: '24px', backgroundColor: '#111827', borderRadius: '8px', border: '1px solid #374151' }}>
           <h3 style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            📊 Analiz Sonuçları
+            📊 Profesyonel Maç Analizi
             <span
               style={{
                 cursor: 'help',
                 fontSize: '18px',
                 color: '#3b82f6'
               }}
-              title="Bu analiz, geçmiş verilere dayalı istatistiksel tahminlerdir. Her bahis türü için yüzeysel (gruplanmış) ve derinlemesine (detaylı) tahmin yüzdeleri gösterilir. Gerçek sonuçlar farklı olabilir."
+              title="Bu analiz, geçmiş verilere dayalı istatistiksel analizdir. ±0.05 toleransla oran aralığı bazlı ve net oran bazlı iki farklı analiz yapılmaktadır."
             >
               ?
             </span>
           </h3>
 
-          {analysisResult.analysis && analysisResult.analysis.length > 0 ? (
+          {/* Genel İstatistiksel Analiz Tablosu */}
+          <div style={{ marginBottom: '32px' }}>
+            <h4 style={{ marginBottom: '16px', color: '#60a5fa', fontSize: '18px', fontWeight: 600 }}>
+              1️⃣ Genel İstatistiksel Analiz (Oran Aralığı Bazlı - ±0.05 Tolerans)
+            </h4>
             <div style={{ overflowX: 'auto' }}>
-              {/* MS1/MSX/MS2 Birleşik Sonuç - Özel Gösterim */}
-              {analysisResult.analysis.find(item => item.betKey === 'MS_COMBINED') && (
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', backgroundColor: '#1f2937', borderRadius: '8px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #374151', backgroundColor: '#111827' }}>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600 }}>Oran Aralığı</th>
+                    <th style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>Toplam Maç</th>
+                    <th style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>Tutan Maç</th>
+                    <th style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>Yüzde</th>
+                    <th style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>KG VAR</th>
+                    <th style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>KG YOK</th>
+                    <th style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>İY KG VAR</th>
+                    <th style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>İY KG YOK</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style={{ borderBottom: '1px solid #374151' }}>
+                    <td style={{ padding: '12px', fontWeight: 600, color: '#10b981' }}>MS1 ({analysisResult.generalAnalysis.ms1.range})</td>
+                    <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.ms1.total.toLocaleString()}</td>
+                    <td style={{ padding: '12px', textAlign: 'center', color: '#10b981' }}>{analysisResult.generalAnalysis.ms1.hit.toLocaleString()}</td>
+                    <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', fontSize: '16px', color: '#10b981' }}>{analysisResult.generalAnalysis.ms1.rate.toFixed(2)}%</td>
+                    <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.ms1.kgVar.toFixed(2)}%</td>
+                    <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.ms1.kgYok.toFixed(2)}%</td>
+                    <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.ms1.iyKgVar.toFixed(2)}%</td>
+                    <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.ms1.iyKgYok.toFixed(2)}%</td>
+                  </tr>
+                  <tr style={{ borderBottom: '1px solid #374151' }}>
+                    <td style={{ padding: '12px', fontWeight: 600, color: '#3b82f6' }}>MSX ({analysisResult.generalAnalysis.msx.range})</td>
+                    <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.msx.total.toLocaleString()}</td>
+                    <td style={{ padding: '12px', textAlign: 'center', color: '#3b82f6' }}>{analysisResult.generalAnalysis.msx.hit.toLocaleString()}</td>
+                    <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', fontSize: '16px', color: '#3b82f6' }}>{analysisResult.generalAnalysis.msx.rate.toFixed(2)}%</td>
+                    <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.msx.kgVar.toFixed(2)}%</td>
+                    <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.msx.kgYok.toFixed(2)}%</td>
+                    <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.msx.iyKgVar.toFixed(2)}%</td>
+                    <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.msx.iyKgYok.toFixed(2)}%</td>
+                  </tr>
+                  <tr style={{ borderBottom: '1px solid #374151' }}>
+                    <td style={{ padding: '12px', fontWeight: 600, color: '#ef4444' }}>MS2 ({analysisResult.generalAnalysis.ms2.range})</td>
+                    <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.ms2.total.toLocaleString()}</td>
+                    <td style={{ padding: '12px', textAlign: 'center', color: '#ef4444' }}>{analysisResult.generalAnalysis.ms2.hit.toLocaleString()}</td>
+                    <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', fontSize: '16px', color: '#ef4444' }}>{analysisResult.generalAnalysis.ms2.rate.toFixed(2)}%</td>
+                    <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.ms2.kgVar.toFixed(2)}%</td>
+                    <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.ms2.kgYok.toFixed(2)}%</td>
+                    <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.ms2.iyKgVar.toFixed(2)}%</td>
+                    <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.generalAnalysis.ms2.iyKgYok.toFixed(2)}%</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* Toplam Havuz Analizi */}
+            <div style={{ marginTop: '24px', padding: '16px', backgroundColor: '#1f2937', borderRadius: '8px', border: '1px solid #3b82f6' }}>
+              <h5 style={{ marginBottom: '12px', color: '#60a5fa', fontSize: '16px', fontWeight: 600 }}>
+                📊 Toplam Havuz Analizi (Tüm Oran Grupları Birleşik)
+              </h5>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+                <div>
+                  <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>Toplam Maç</div>
+                  <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#e5e7eb' }}>{analysisResult.generalAnalysis.pool.total.toLocaleString()}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>MS1 Yüzdesi</div>
+                  <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#10b981' }}>{analysisResult.generalAnalysis.pool.ms1Rate.toFixed(2)}%</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>MSX Yüzdesi</div>
+                  <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#3b82f6' }}>{analysisResult.generalAnalysis.pool.msxRate.toFixed(2)}%</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>MS2 Yüzdesi</div>
+                  <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#ef4444' }}>{analysisResult.generalAnalysis.pool.ms2Rate.toFixed(2)}%</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>KG VAR</div>
+                  <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#e5e7eb' }}>{analysisResult.generalAnalysis.pool.kgVar.toFixed(2)}%</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>KG YOK</div>
+                  <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#e5e7eb' }}>{analysisResult.generalAnalysis.pool.kgYok.toFixed(2)}%</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>İY KG VAR</div>
+                  <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#e5e7eb' }}>{analysisResult.generalAnalysis.pool.iyKgVar.toFixed(2)}%</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>İY KG YOK</div>
+                  <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#e5e7eb' }}>{analysisResult.generalAnalysis.pool.iyKgYok.toFixed(2)}%</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Derinlemesine Analiz Tablosu */}
+          <div style={{ marginBottom: '32px' }}>
+            <h4 style={{ marginBottom: '16px', color: '#34d399', fontSize: '18px', fontWeight: 600 }}>
+              2️⃣ Derinlemesine Analiz (Net Oranlar - Birebir Eşleşme)
+            </h4>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', backgroundColor: '#1f2937', borderRadius: '8px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #374151', backgroundColor: '#111827' }}>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600 }}>Net Oran</th>
+                    <th style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>Toplam Maç</th>
+                    <th style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>MS1 Başarı %</th>
+                    <th style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>MSX Başarı %</th>
+                    <th style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>MS2 Başarı %</th>
+                    <th style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>KG VAR</th>
+                    <th style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>KG YOK</th>
+                    <th style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>İY KG VAR</th>
+                    <th style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>İY KG YOK</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style={{ padding: '12px', fontWeight: 600 }}>
+                      MS1: {analysisResult.odds.ms1.toFixed(2)}<br/>
+                      MSX: {analysisResult.odds.msx.toFixed(2)}<br/>
+                      MS2: {analysisResult.odds.ms2.toFixed(2)}
+                    </td>
+                    <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold' }}>{analysisResult.deepAnalysis.total.toLocaleString()}</td>
+                    <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', fontSize: '16px', color: '#10b981' }}>{analysisResult.deepAnalysis.ms1Rate.toFixed(2)}%</td>
+                    <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', fontSize: '16px', color: '#3b82f6' }}>{analysisResult.deepAnalysis.msxRate.toFixed(2)}%</td>
+                    <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', fontSize: '16px', color: '#ef4444' }}>{analysisResult.deepAnalysis.ms2Rate.toFixed(2)}%</td>
+                    <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.deepAnalysis.kgVar.toFixed(2)}%</td>
+                    <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.deepAnalysis.kgYok.toFixed(2)}%</td>
+                    <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.deepAnalysis.iyKgVar.toFixed(2)}%</td>
+                    <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.deepAnalysis.iyKgYok.toFixed(2)}%</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Yorum & Sonuç */}
+          <div style={{ padding: '20px', backgroundColor: '#1f2937', borderRadius: '8px', border: '1px solid #fbbf24' }}>
+            <h4 style={{ marginBottom: '16px', color: '#fbbf24', fontSize: '18px', fontWeight: 600 }}>
+              4️⃣ Yorum & Sonuç
+            </h4>
+            <div style={{ lineHeight: '1.8', color: '#e5e7eb' }}>
+              <p style={{ marginBottom: '12px' }}>
+                <strong style={{ color: '#fbbf24' }}>İstatistiksel Öne Çıkan Sonuç:</strong> {analysisResult.comment.dominantResult} (%{analysisResult.comment.dominantRate.toFixed(2)})
+              </p>
+              <p style={{ marginBottom: '12px' }}>
+                <strong style={{ color: '#fbbf24' }}>KG Açısından:</strong> {analysisResult.comment.isKgRisky ? '⚠️ Riskli (KG VAR oranı düşük)' : '✅ Güvenli (KG VAR oranı yüksek)'}
+              </p>
+              <p style={{ marginBottom: '12px' }}>
+                <strong style={{ color: '#fbbf24' }}>Maç Karakteri:</strong> {analysisResult.comment.isFavored ? '⭐ Favori maç' : '⚖️ Dengeli maç'}
+              </p>
+              <p style={{ marginBottom: '0', padding: '12px', backgroundColor: '#111827', borderRadius: '6px', borderLeft: '4px solid #3b82f6' }}>
+                <strong style={{ color: '#3b82f6' }}>💡 Öneri:</strong> {analysisResult.comment.recommendation}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {analysisResult && !analysisResult.generalAnalysis && (
+        <div id="analysis-results" style={{ marginTop: '32px', padding: '24px', backgroundColor: '#111827', borderRadius: '8px', border: '1px solid #374151' }}>
+          <div style={{ padding: '24px', textAlign: 'center', color: '#9ca3af' }}>
+            <p>Bu maç için analiz verisi bulunamadı.</p>
+            <p style={{ fontSize: '12px', marginTop: '8px' }}>Lütfen başka bir maç deneyin veya daha sonra tekrar kontrol edin.</p>
+          </div>
+        </div>
+      )}
                 <div style={{ 
                   marginBottom: '24px', 
                   padding: '20px', 
@@ -367,7 +558,7 @@ export default function AnalysisRobotPage() {
                   <tr style={{ borderBottom: '2px solid #374151' }}>
                     <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600 }}>Metri̇k / Bahis</th>
                     {analysisResult.analysis
-                      .filter(item => item.betKey !== 'MS_COMBINED') // MS_COMBINED'ı tablodan çıkar
+                      .filter(item => item.betKey !== 'MS_COMBINED') // MS_COMBINED'ı tablodan çıkar ama MS1, MSX, MS2'yi göster
                       .map((item, idx) => (
                       <th
                         key={idx}

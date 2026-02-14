@@ -3105,6 +3105,7 @@ export default function Home() {
           <table className="matches-table" style={{ marginRight: '0', marginBottom: '20px' }}>
             <thead>
               <tr>
+                <th>Analiz</th>
                 <th>Lig</th>
                 <th>Maç</th>
                 <th>Tarih</th>
@@ -3157,12 +3158,21 @@ export default function Home() {
                   </div>
                 </th>
                 <th>MS</th>
-                <th>Analiz</th>
               </tr>
             </thead>
             <tbody>
               {displayedMatches.map((match) => (
                 <tr key={match.match_id}>
+                  <td>
+                    <Link
+                      className="btn-analiz"
+                      href={{ pathname: `/match/${match.match_id}`, query: buildAnalysisQuery() }}
+                      onClick={rememberScroll}
+                      scroll={false}
+                    >
+                      Analiz
+                    </Link>
+                  </td>
                   <td>{match.league}</td>
                   <td>{match.home_team} - {match.away_team}</td>
                   <td>{getDateTimeDisplay(match)}</td>
@@ -3175,16 +3185,6 @@ export default function Home() {
                   <td>{getTotalGoalsDisplay(match)}</td>
                   <td>{getIyDisplay(match)}</td>
                   <td>{match.score || '-'}</td>
-                  <td>
-                    <Link
-                      className="btn-analiz"
-                      href={{ pathname: `/match/${match.match_id}`, query: buildAnalysisQuery() }}
-                      onClick={rememberScroll}
-                      scroll={false}
-                    >
-                      Analiz
-                    </Link>
-                  </td>
                 </tr>
               ))}
             </tbody>

@@ -256,6 +256,7 @@ export default function AnalysisRobotPage() {
           <table className="matches-table">
             <thead>
               <tr>
+                <th>İşlem</th>
                 <th>Lig</th>
                 <th>Maç</th>
                 <th>Tarih</th>
@@ -267,25 +268,11 @@ export default function AnalysisRobotPage() {
                 <th>KG Yok</th>
                 <th>2.5 ÜST</th>
                 <th>2.5 ALT</th>
-                <th>İşlem</th>
               </tr>
             </thead>
             <tbody>
               {matches.map((match) => (
                 <tr key={match.match_id}>
-                  <td>{match.league}</td>
-                  <td>
-                    <strong>{match.home_team}</strong> vs <strong>{match.away_team}</strong>
-                  </td>
-                  <td>{match.date}</td>
-                  <td>{match.time}</td>
-                  <td>{formatOdd(match.odds.H)}</td>
-                  <td>{formatOdd(match.odds.D)}</td>
-                  <td>{formatOdd(match.odds.A)}</td>
-                  <td>{formatOdd(match.odds.BTTSY)}</td>
-                  <td>{formatOdd(match.odds.BTTSN)}</td>
-                  <td>{formatOdd(match.odds.O25)}</td>
-                  <td>{formatOdd(match.odds.U25)}</td>
                   <td>
                     <button
                       onClick={() => analyzeMatch(match)}
@@ -303,6 +290,19 @@ export default function AnalysisRobotPage() {
                       {analyzingMatch === match.match_id ? 'Analiz Ediliyor...' : 'Analiz Et'}
                     </button>
                   </td>
+                  <td>{match.league}</td>
+                  <td>
+                    <strong>{match.home_team}</strong> vs <strong>{match.away_team}</strong>
+                  </td>
+                  <td>{match.date}</td>
+                  <td>{match.time}</td>
+                  <td>{formatOdd(match.odds.H)}</td>
+                  <td>{formatOdd(match.odds.D)}</td>
+                  <td>{formatOdd(match.odds.A)}</td>
+                  <td>{formatOdd(match.odds.BTTSY)}</td>
+                  <td>{formatOdd(match.odds.BTTSN)}</td>
+                  <td>{formatOdd(match.odds.O25)}</td>
+                  <td>{formatOdd(match.odds.U25)}</td>
                 </tr>
               ))}
             </tbody>

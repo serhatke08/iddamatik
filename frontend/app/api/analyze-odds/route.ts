@@ -5,8 +5,29 @@ import path from 'path'
 // JSON dosyalarını yükle
 const loadAnalysisData = () => {
   try {
-    const groupedPath = path.join(process.cwd(), 'public', 'data', 'league_odds_analysis_grouped_filtered.json')
-    const detailedPath = path.join(process.cwd(), 'public', 'data', 'league_odds_analysis_filtered.json')
+    // Vercel'de çalışması için hem public/data hem de fallback olarak root/data kontrol et
+    const publicGroupedPath = path.join(process.cwd(), 'public', 'data', 'league_odds_analysis_grouped_filtered.json')
+    const publicDetailedPath = path.join(process.cwd(), 'public', 'data', 'league_odds_analysis_filtered.json')
+    
+    // Önce public/data'yı kontrol et
+    let groupedPath = publicGroupedPath
+    let detailedPath = publicDetailedPath
+    
+    if (!fs.existsSync(publicGroupedPath)) {
+      // Fallback: root/data klasörünü kontrol et
+      const rootGroupedPath = path.join(process.cwd(), '..', 'data', 'league_odds_analysis_grouped_filtered.json')
+      const rootDetailedPath = path.join(process.cwd(), '..', 'data', 'league_odds_analysis_filtered.json')
+      
+      if (fs.existsSync(rootGroupedPath)) {
+        groupedPath = rootGroupedPath
+        detailedPath = rootDetailedPath
+      }
+    }
+    
+    if (!fs.existsSync(groupedPath) || !fs.existsSync(detailedPath)) {
+      console.error('Analysis JSON files not found:', { groupedPath, detailedPath })
+      return { groupedData: null, detailedData: null }
+    }
     
     const groupedData = JSON.parse(fs.readFileSync(groupedPath, 'utf-8'))
     const detailedData = JSON.parse(fs.readFileSync(detailedPath, 'utf-8'))

@@ -140,6 +140,20 @@ const getGeneralAnalysis = (ms1: number, msx: number, ms2: number) => {
   let poolKgYok = 0
   let poolIyKgVar = 0
   let poolIyKgYok = 0
+  let poolOver15 = 0
+  let poolUnder15 = 0
+  let poolOver25 = 0
+  let poolUnder25 = 0
+  let poolOver35 = 0
+  let poolUnder35 = 0
+  let poolKgVarOver15 = 0
+  let poolKgVarOver25 = 0
+  let poolKgVarUnder35 = 0
+  let poolIyKgVarCount = 0
+  let poolIyTotal = 0
+  let poolSecondHalfKgVar = 0
+  let poolSecondHalfKgYok = 0
+  let poolSecondHalfTotal = 0
 
   poolMatches.forEach(m => {
     const h = m.fthg
@@ -149,14 +163,45 @@ const getGeneralAnalysis = (ms1: number, msx: number, ms2: number) => {
       else if (h === a) poolMsxCount++
       else if (h < a) poolMs2Count++
       
-      if (h > 0 && a > 0) poolKgVar++
-      else poolKgYok++
+      const totalGoals = h + a
+      if (totalGoals >= 2) poolOver15++
+      else poolUnder15++
+      if (totalGoals >= 3) poolOver25++
+      else poolUnder25++
+      if (totalGoals >= 4) poolOver35++
+      else poolUnder35++
+      
+      if (h > 0 && a > 0) {
+        poolKgVar++
+        if (totalGoals >= 2) poolKgVarOver15++
+        if (totalGoals >= 3) poolKgVarOver25++
+        if (totalGoals < 4) poolKgVarUnder35++
+      } else {
+        poolKgYok++
+      }
       
       const hthg = m.hthg
       const htag = m.htag
       if (hthg !== null && hthg !== undefined && htag !== null && htag !== undefined) {
-        if (hthg > 0 && htag > 0) poolIyKgVar++
-        else poolIyKgYok++
+        poolIyTotal++
+        if (hthg > 0 && htag > 0) {
+          poolIyKgVar++
+          poolIyKgVarCount++
+        } else {
+          poolIyKgYok++
+        }
+        
+        // 2. yarı KG analizi (maç sonu - ilk yarı)
+        const secondHalfHome = h - hthg
+        const secondHalfAway = a - htag
+        if (secondHalfHome >= 0 && secondHalfAway >= 0) {
+          poolSecondHalfTotal++
+          if (secondHalfHome > 0 && secondHalfAway > 0) {
+            poolSecondHalfKgVar++
+          } else {
+            poolSecondHalfKgYok++
+          }
+        }
       }
     }
   })
@@ -199,8 +244,19 @@ const getGeneralAnalysis = (ms1: number, msx: number, ms2: number) => {
       ms2Rate: poolTotal > 0 ? (poolMs2Count / poolTotal) * 100 : 0,
       kgVar: poolTotal > 0 ? (poolKgVar / poolTotal) * 100 : 0,
       kgYok: poolTotal > 0 ? (poolKgYok / poolTotal) * 100 : 0,
-      iyKgVar: poolTotal > 0 ? (poolIyKgVar / poolTotal) * 100 : 0,
-      iyKgYok: poolTotal > 0 ? (poolIyKgYok / poolTotal) * 100 : 0
+      iyKgVar: poolIyTotal > 0 ? (poolIyKgVar / poolIyTotal) * 100 : 0,
+      iyKgYok: poolIyTotal > 0 ? (poolIyKgYok / poolIyTotal) * 100 : 0,
+      over15: poolTotal > 0 ? (poolOver15 / poolTotal) * 100 : 0,
+      under15: poolTotal > 0 ? (poolUnder15 / poolTotal) * 100 : 0,
+      over25: poolTotal > 0 ? (poolOver25 / poolTotal) * 100 : 0,
+      under25: poolTotal > 0 ? (poolUnder25 / poolTotal) * 100 : 0,
+      over35: poolTotal > 0 ? (poolOver35 / poolTotal) * 100 : 0,
+      under35: poolTotal > 0 ? (poolUnder35 / poolTotal) * 100 : 0,
+      kgVarOver15: poolKgVar > 0 ? (poolKgVarOver15 / poolKgVar) * 100 : 0,
+      kgVarOver25: poolKgVar > 0 ? (poolKgVarOver25 / poolKgVar) * 100 : 0,
+      kgVarUnder35: poolKgVar > 0 ? (poolKgVarUnder35 / poolKgVar) * 100 : 0,
+      secondHalfKgVar: poolSecondHalfTotal > 0 ? (poolSecondHalfKgVar / poolSecondHalfTotal) * 100 : 0,
+      secondHalfKgYok: poolSecondHalfTotal > 0 ? (poolSecondHalfKgYok / poolSecondHalfTotal) * 100 : 0
     }
   }
 }
@@ -323,7 +379,7 @@ export async function POST(request: Request) {
     // Derinlemesine Analiz (Net Oranlar)
     const deepAnalysis = getDeepAnalysis(ms1, msx, ms2)
 
-    // Yorum & Sonuç
+    // Yorum & Sonuç - Detaylı Analiz
     const highestRate = Math.max(
       generalAnalysis.ms1.rate,
       generalAnalysis.msx.rate,
@@ -336,15 +392,85 @@ export async function POST(request: Request) {
 
     const isKgRisky = generalAnalysis.pool.kgVar < 50
     const isFavored = ms1 < 2.0
+    const pool = generalAnalysis.pool
+
+    // Detaylı yorumlar oluştur
+    const comments: string[] = []
+    
+    // İlk yarı KG analizi
+    if (pool.iyKgVar > 0) {
+      if (pool.iyKgVar < 30) {
+        comments.push(`⚽ İlk yarıda KG oranı düşük (%${pool.iyKgVar.toFixed(1)}), genellikle 2. yarıda gol beklenir.`)
+      } else if (pool.iyKgVar > 60) {
+        comments.push(`⚽ İlk yarıda KG oranı yüksek (%${pool.iyKgVar.toFixed(1)}), erken gol beklentisi güçlü.`)
+      } else {
+        comments.push(`⚽ İlk yarıda KG oranı dengeli (%${pool.iyKgVar.toFixed(1)}).`)
+      }
+    }
+
+    // 2. yarı KG analizi
+    if (pool.secondHalfKgVar > 0) {
+      if (pool.secondHalfKgVar < 30) {
+        comments.push(`⚽ 2. yarıda KG oranı düşük (%${pool.secondHalfKgVar.toFixed(1)}), genellikle tek takım gol atar.`)
+      } else if (pool.secondHalfKgVar > 60) {
+        comments.push(`⚽ 2. yarıda KG oranı yüksek (%${pool.secondHalfKgVar.toFixed(1)}), karşılıklı gol ihtimali güçlü.`)
+      }
+    }
+
+    // KG VAR + Gol çizgisi kombinasyonları
+    if (pool.kgVar > 0) {
+      if (pool.kgVarOver15 >= 80) {
+        comments.push(`📊 KG VAR olan maçlarda %${pool.kgVarOver15.toFixed(1)} oranında 1.5 ÜST görülmüş.`)
+      }
+      if (pool.kgVarOver25 >= 60) {
+        comments.push(`📊 KG VAR olan maçlarda %${pool.kgVarOver25.toFixed(1)} oranında 2.5 ÜST görülmüş.`)
+      }
+      if (pool.kgVarUnder35 >= 70) {
+        comments.push(`📊 KG VAR olan maçlarda %${pool.kgVarUnder35.toFixed(1)} oranında 3.5 ALT görülmüş (genellikle 2-3 gol).`)
+      }
+    }
+
+    // Gol çizgisi analizi
+    if (pool.over25 >= 60) {
+      comments.push(`🎯 2.5 ÜST oranı yüksek (%${pool.over25.toFixed(1)}), gol beklentisi güçlü.`)
+    } else if (pool.under25 >= 60) {
+      comments.push(`🎯 2.5 ALT oranı yüksek (%${pool.under25.toFixed(1)}), az gol beklenir.`)
+    }
+
+    // Genel öneri
+    let recommendation = ''
+    if (isFavored) {
+      if (highestRate > 60) {
+        recommendation = 'Güçlü favori, yüksek başarı oranı. Ancak dikkatli olun, sürprizler olabilir.'
+      } else if (highestRate > 50) {
+        recommendation = 'Favori ama riskli. İstatistiksel avantaj var ama garantili değil.'
+      } else {
+        recommendation = 'Favori görünse de istatistikler zayıf. Sürprize açık maç.'
+      }
+    } else {
+      if (highestRate > 50) {
+        recommendation = 'Dengeli maç, istatistiksel avantaj var. Ancak sonuç belirsiz.'
+      } else {
+        recommendation = 'Sürprize açık maç. İstatistiksel olarak net bir favori yok.'
+      }
+    }
 
     const comment = {
       dominantResult,
       dominantRate: highestRate,
       isKgRisky,
       isFavored,
-      recommendation: isFavored 
-        ? (highestRate > 60 ? 'Güçlü favori, yüksek başarı oranı' : 'Favori ama riskli')
-        : (highestRate > 50 ? 'Dengeli maç, istatistiksel avantaj var' : 'Sürprize açık maç')
+      recommendation,
+      detailedComments: comments,
+      stats: {
+        iyKgVar: pool.iyKgVar,
+        secondHalfKgVar: pool.secondHalfKgVar,
+        kgVarOver15: pool.kgVarOver15,
+        kgVarOver25: pool.kgVarOver25,
+        kgVarUnder35: pool.kgVarUnder35,
+        over25: pool.over25,
+        under25: pool.under25
+      }
     }
 
     return NextResponse.json({

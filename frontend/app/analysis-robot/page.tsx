@@ -530,6 +530,19 @@ export default function AnalysisRobotPage() {
               <p style={{ marginBottom: '12px' }}>
                 <strong style={{ color: '#fbbf24' }}>Maç Karakteri:</strong> {analysisResult.comment.isFavored ? '⭐ Favori maç' : '⚖️ Dengeli maç'}
               </p>
+              
+              {/* Detaylı Yorumlar */}
+              {analysisResult.comment.detailedComments && analysisResult.comment.detailedComments.length > 0 && (
+                <div style={{ marginTop: '16px', marginBottom: '16px', padding: '12px', backgroundColor: '#111827', borderRadius: '6px', borderLeft: '4px solid #10b981' }}>
+                  <strong style={{ color: '#10b981', display: 'block', marginBottom: '8px' }}>📈 Detaylı İstatistiksel Yorumlar:</strong>
+                  {analysisResult.comment.detailedComments.map((comment, idx) => (
+                    <p key={idx} style={{ marginBottom: '8px', fontSize: '13px', color: '#cbd5e1' }}>
+                      {comment}
+                    </p>
+                  ))}
+                </div>
+              )}
+              
               <p style={{ marginBottom: '0', padding: '12px', backgroundColor: '#111827', borderRadius: '6px', borderLeft: '4px solid #3b82f6' }}>
                 <strong style={{ color: '#3b82f6' }}>💡 Öneri:</strong> {analysisResult.comment.recommendation}
               </p>

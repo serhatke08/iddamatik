@@ -8,26 +8,31 @@ export async function GET(request: Request) {
     
     // Formatla
     const formattedMatches = upcomingMatches.map((match) => {
-      // Lig ismini normalize et
+      // Lig ismini normalize et - iddaa-scrape'den gelen formatı koru
       let league = match.league || 'Bilinmeyen Lig'
 
-      // Bazı sağlayıcılar "Country — League" veya "Country - League" formatı döndürüyor.
-      // Ne gelirse gelsin, son tire/uzun tireden SONRASINI lig adı kabul ediyoruz.
-      const separators = ['—', '-', '–']
-      let lastIdx = -1
-      separators.forEach(sep => {
-        const idx = league.lastIndexOf(sep)
-        if (idx > lastIdx) lastIdx = idx
-      })
-      if (lastIdx !== -1 && lastIdx + 1 < league.length) {
-        league = league.slice(lastIdx + 1).trim()
+      // Eğer lig ismi "Country — League" formatındaysa (uzun tire ile), sonrasını al
+      // Ama kısa tire (-) ile ayrılmışsa (örneğin "V-Ligi"), olduğu gibi bırak
+      const longDashIndex = league.lastIndexOf('—')
+      if (longDashIndex !== -1 && longDashIndex + 1 < league.length) {
+        // Uzun tire (—) bulundu, sonrasını al
+        league = league.slice(longDashIndex + 1).trim()
+      } else {
+        // Uzun tire yok, ama normal tire (-) ile ayrılmış olabilir
+        // Sadece başta "Country - " formatı varsa (boşluk + tire + boşluk), sonrasını al
+        const normalDashMatch = league.match(/^[^-]+ - (.+)$/)
+        if (normalDashMatch && normalDashMatch[1]) {
+          league = normalDashMatch[1].trim()
+        }
+        // Aksi halde olduğu gibi bırak (örneğin "V-Ligi", "1.Lig" gibi)
       }
 
       // Ek güvenlik: içinde "super lig" geçiyorsa direkt "Super Lig" yap
-      if (league.toLowerCase().includes('super lig')) {
+      if (league.toLowerCase().includes('super lig') || league.toLowerCase().includes('süper lig')) {
         league = 'Super Lig'
       }
 
+      // Diğer lig ismi düzeltmeleri
       if (league === 'Premiership') league = 'Scottish Premiership'
       if (league === 'Serie A Betano') league = 'Serie A'
       

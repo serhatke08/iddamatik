@@ -472,9 +472,12 @@ export default function AnalysisRobotPage() {
                 <tbody>
                   <tr>
                     <td style={{ padding: '12px', fontWeight: 600 }}>
-                      MS1: {analysisResult.odds.ms1.toFixed(2)}<br/>
-                      MSX: {analysisResult.odds.msx.toFixed(2)}<br/>
-                      MS2: {analysisResult.odds.ms2.toFixed(2)}
+                      MS1: {analysisResult.odds.ms1.toFixed(2)} ({analysisResult.deepAnalysis.ms1Count || 0} maç)<br/>
+                      MSX: {analysisResult.odds.msx.toFixed(2)} ({analysisResult.deepAnalysis.msxCount || 0} maç)<br/>
+                      MS2: {analysisResult.odds.ms2.toFixed(2)} ({analysisResult.deepAnalysis.ms2Count || 0} maç)<br/>
+                      <span style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px', display: 'block' }}>
+                        Havuz Toplam: {analysisResult.deepAnalysis.total.toLocaleString()} maç
+                      </span>
                     </td>
                     <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold' }}>{analysisResult.deepAnalysis.total.toLocaleString()}</td>
                     <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', fontSize: '16px', color: '#10b981' }}>{analysisResult.deepAnalysis.ms1Rate.toFixed(2)}%</td>

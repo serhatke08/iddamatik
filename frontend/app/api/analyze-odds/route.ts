@@ -205,28 +205,48 @@ const getGeneralAnalysis = (ms1: number, msx: number, ms2: number) => {
   }
 }
 
-// Derinlemesine Analiz (Net Oranlar - ±0.01 Toleransla Eşleşme)
+// Derinlemesine Analiz (Net Oranlar - ±0.01 Toleransla Havuz)
+// Her oran için ayrı ayrı maçları bul, hepsini birleştir, havuzdaki maçların MS1/MSX/MS2 başarı yüzdelerini hesapla
 const getDeepAnalysis = (ms1: number, msx: number, ms2: number) => {
   const allMatches = csvService.loadAll()
   
-  // ±0.01 toleransla oranlara sahip maçları bul
-  const exactMatches = allMatches.filter(m => {
+  // Her oran için ±0.01 toleransla maçları bul
+  const ms1Matches = new Set<string>() // match_id'leri tutmak için
+  const msxMatches = new Set<string>()
+  const ms2Matches = new Set<string>()
+  
+  allMatches.forEach(m => {
     const odds = m.odds || {}
     const mMs1 = odds.ms1
     const mMsx = odds.msx
     const mMs2 = odds.ms2
     
-    if (!mMs1 || !mMsx || !mMs2) return false
+    // MS1=2.07 (±0.01) olan maçlar
+    if (mMs1 && Math.abs(mMs1 - ms1) <= 0.01) {
+      ms1Matches.add(m.match_id)
+    }
     
-    // ±0.01 toleransla kontrol et
-    const ms1Match = Math.abs(mMs1 - ms1) <= 0.01
-    const msxMatch = Math.abs(mMsx - msx) <= 0.01
-    const ms2Match = Math.abs(mMs2 - ms2) <= 0.01
+    // MSX=2.77 (±0.01) olan maçlar
+    if (mMsx && Math.abs(mMsx - msx) <= 0.01) {
+      msxMatches.add(m.match_id)
+    }
     
-    return ms1Match && msxMatch && ms2Match
+    // MS2=3.09 (±0.01) olan maçlar
+    if (mMs2 && Math.abs(mMs2 - ms2) <= 0.01) {
+      ms2Matches.add(m.match_id)
+    }
   })
-
-  let total = exactMatches.length
+  
+  // Tüm maçları birleştir (havuz)
+  const poolMatchIds = new Set<string>()
+  ms1Matches.forEach(id => poolMatchIds.add(id))
+  msxMatches.forEach(id => poolMatchIds.add(id))
+  ms2Matches.forEach(id => poolMatchIds.add(id))
+  
+  // Havuzdaki maçları al
+  const poolMatches = allMatches.filter(m => poolMatchIds.has(m.match_id))
+  
+  let total = poolMatches.length
   let ms1Hit = 0
   let msxHit = 0
   let ms2Hit = 0
@@ -235,17 +255,20 @@ const getDeepAnalysis = (ms1: number, msx: number, ms2: number) => {
   let iyKgVar = 0
   let iyKgYok = 0
 
-  exactMatches.forEach(m => {
+  poolMatches.forEach(m => {
     const h = m.fthg
     const a = m.ftag
     if (h !== null && h !== undefined && a !== null && a !== undefined) {
-      if (h > a) ms1Hit++
-      else if (h === a) msxHit++
-      else if (h < a) ms2Hit++
+      // Maç sonucuna göre MS1/MSX/MS2 başarısı
+      if (h > a) ms1Hit++      // Ev sahibi kazandı
+      else if (h === a) msxHit++ // Beraberlik
+      else if (h < a) ms2Hit++   // Deplasman kazandı
       
+      // KG VAR/YOK
       if (h > 0 && a > 0) kgVar++
       else kgYok++
       
+      // İlk Yarı KG VAR/YOK
       const hthg = m.hthg
       const htag = m.htag
       if (hthg !== null && hthg !== undefined && htag !== null && htag !== undefined) {
@@ -257,6 +280,9 @@ const getDeepAnalysis = (ms1: number, msx: number, ms2: number) => {
 
   return {
     total,
+    ms1Count: ms1Matches.size,  // MS1=2.07 olan maç sayısı
+    msxCount: msxMatches.size,   // MSX=2.77 olan maç sayısı
+    ms2Count: ms2Matches.size,   // MS2=3.09 olan maç sayısı
     ms1Rate: total > 0 ? (ms1Hit / total) * 100 : 0,
     msxRate: total > 0 ? (msxHit / total) * 100 : 0,
     ms2Rate: total > 0 ? (ms2Hit / total) * 100 : 0,

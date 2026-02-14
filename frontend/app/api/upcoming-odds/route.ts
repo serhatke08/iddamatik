@@ -63,10 +63,14 @@ export async function GET(request: Request) {
         // Aksi halde olduğu gibi bırak (örneğin "V-Ligi", "1.Lig" gibi)
       }
 
-      // Ek güvenlik: içinde "super lig" geçiyorsa direkt "Super Lig" yap
-      if (league.toLowerCase().includes('super lig') || league.toLowerCase().includes('süper lig')) {
+      // Sadece Türkiye Super Lig'i için özel kontrol
+      // Eğer lig ismi "Turkey" veya "Türkiye" içeriyorsa ve "Super Lig" veya "Süper Lig" içeriyorsa
+      const leagueLower = league.toLowerCase()
+      if ((leagueLower.includes('turkey') || leagueLower.includes('türkiye')) && 
+          (leagueLower.includes('super lig') || leagueLower.includes('süper lig'))) {
         league = 'Super Lig'
       }
+      // Diğer ülkelerin "Super Lig" isimli liglerini olduğu gibi bırak (örn: "Serbia Super Liga")
 
       // Diğer lig ismi düzeltmeleri
       if (league === 'Premiership') league = 'Scottish Premiership'

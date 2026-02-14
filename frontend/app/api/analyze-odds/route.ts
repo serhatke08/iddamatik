@@ -205,14 +205,25 @@ const getGeneralAnalysis = (ms1: number, msx: number, ms2: number) => {
   }
 }
 
-// Derinlemesine Analiz (Net Oranlar - Birebir Eşleşme)
+// Derinlemesine Analiz (Net Oranlar - ±0.01 Toleransla Eşleşme)
 const getDeepAnalysis = (ms1: number, msx: number, ms2: number) => {
   const allMatches = csvService.loadAll()
   
-  // Sadece birebir oranlara sahip maçları bul
+  // ±0.01 toleransla oranlara sahip maçları bul
   const exactMatches = allMatches.filter(m => {
     const odds = m.odds || {}
-    return odds.ms1 === ms1 && odds.msx === msx && odds.ms2 === ms2
+    const mMs1 = odds.ms1
+    const mMsx = odds.msx
+    const mMs2 = odds.ms2
+    
+    if (!mMs1 || !mMsx || !mMs2) return false
+    
+    // ±0.01 toleransla kontrol et
+    const ms1Match = Math.abs(mMs1 - ms1) <= 0.01
+    const msxMatch = Math.abs(mMsx - msx) <= 0.01
+    const ms2Match = Math.abs(mMs2 - ms2) <= 0.01
+    
+    return ms1Match && msxMatch && ms2Match
   })
 
   let total = exactMatches.length

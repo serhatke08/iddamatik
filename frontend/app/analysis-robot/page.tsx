@@ -328,11 +328,47 @@ export default function AnalysisRobotPage() {
 
           {analysisResult.analysis && analysisResult.analysis.length > 0 ? (
             <div style={{ overflowX: 'auto' }}>
+              {/* MS1/MSX/MS2 Birleşik Sonuç - Özel Gösterim */}
+              {analysisResult.analysis.find(item => item.betKey === 'MS_COMBINED') && (
+                <div style={{ 
+                  marginBottom: '24px', 
+                  padding: '20px', 
+                  backgroundColor: '#1f2937', 
+                  borderRadius: '8px',
+                  border: '2px solid #3b82f6'
+                }}>
+                  <h4 style={{ marginBottom: '12px', color: '#60a5fa', fontSize: '16px', fontWeight: 600 }}>
+                    🎯 MS1/MSX/MS2 Birleşik Analiz
+                  </h4>
+                  {(() => {
+                    const msItem = analysisResult.analysis.find(item => item.betKey === 'MS_COMBINED')
+                    if (!msItem) return null
+                    return (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
+                        <div style={{ flex: 1, minWidth: '200px' }}>
+                          <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#10b981', marginBottom: '8px' }}>
+                            {msItem.superficial.rate.toFixed(2)}%
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#9ca3af' }}>
+                            {msItem.superficial.total.toLocaleString()} maçtan {msItem.superficial.hit.toLocaleString()} tanesi tutmuş
+                          </div>
+                          <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px' }}>
+                            Oranlar: {msItem.odd} (±0.01 tolerans)
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })()}
+                </div>
+              )}
+
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                 <thead>
                   <tr style={{ borderBottom: '2px solid #374151' }}>
                     <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600 }}>Metri̇k / Bahis</th>
-                    {analysisResult.analysis.map((item, idx) => (
+                    {analysisResult.analysis
+                      .filter(item => item.betKey !== 'MS_COMBINED') // MS_COMBINED'ı tablodan çıkar
+                      .map((item, idx) => (
                       <th
                         key={idx}
                         style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}
@@ -346,9 +382,11 @@ export default function AnalysisRobotPage() {
                   {/* Oran satırı */}
                   <tr style={{ borderBottom: '1px solid #374151' }}>
                     <td style={{ padding: '12px', fontWeight: 600 }}>Oran</td>
-                  {analysisResult.analysis.map((item, idx) => (
+                  {analysisResult.analysis
+                      .filter(item => item.betKey !== 'MS_COMBINED')
+                      .map((item, idx) => (
                       <td key={idx} style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>
-                        {item.odd.toFixed(2)}
+                        {typeof item.odd === 'string' ? item.odd : item.odd.toFixed(2)}
                       </td>
                     ))}
                   </tr>
@@ -358,7 +396,9 @@ export default function AnalysisRobotPage() {
                     <td style={{ padding: '12px', fontWeight: 600, color: '#60a5fa' }}>
                       Yüzeysel Tahmin (%)
                     </td>
-                    {analysisResult.analysis.map((item, idx) => {
+                    {analysisResult.analysis
+                      .filter(item => item.betKey !== 'MS_COMBINED')
+                      .map((item, idx) => {
                       const hasData = item.superficial.total > 0
                       return (
                         <td key={idx} style={{ padding: '12px', textAlign: 'center' }}>
@@ -384,7 +424,9 @@ export default function AnalysisRobotPage() {
                     <td style={{ padding: '12px', fontWeight: 600, color: '#34d399' }}>
                       Derinlemesine Tahmin (%)
                     </td>
-                    {analysisResult.analysis.map((item, idx) => {
+                    {analysisResult.analysis
+                      .filter(item => item.betKey !== 'MS_COMBINED')
+                      .map((item, idx) => {
                       const hasData = item.deep && item.deep.total > 0
                       return (
                         <td key={idx} style={{ padding: '12px', textAlign: 'center' }}>
@@ -410,7 +452,9 @@ export default function AnalysisRobotPage() {
                     <td style={{ padding: '12px', fontWeight: 600, color: '#fbbf24' }}>
                       Genel Oran (%)
                     </td>
-                    {analysisResult.analysis.map((item, idx) => {
+                    {analysisResult.analysis
+                      .filter(item => item.betKey !== 'MS_COMBINED')
+                      .map((item, idx) => {
                       const hasSuperficialData = item.superficial.total > 0
                       const hasDeepData = item.deep && item.deep.total > 0
                       const rateParts: number[] = []
@@ -439,7 +483,9 @@ export default function AnalysisRobotPage() {
 
               {/* Kısa açıklama satırı: her bahis için ilk cümle */}
               <div style={{ marginTop: '16px', fontSize: '12px', color: '#9ca3af' }}>
-                {analysisResult.analysis.map((item, idx) => (
+                {analysisResult.analysis
+                  .filter(item => item.betKey !== 'MS_COMBINED')
+                  .map((item, idx) => (
                   <div key={idx} style={{ marginBottom: '4px' }}>
                     <strong style={{ color: '#e5e7eb' }}>{item.betType}:</strong>{' '}
                     {item.explanation.split('\n')[0] || ''}

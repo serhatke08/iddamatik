@@ -164,6 +164,60 @@ const aggregateGroupedData = (groupedData: any, betType: string, oddRange: strin
   }
 }
 
+// Belirli bir oran için ±0.01 toleransla veri topla (örn: 2.13 → 2.12, 2.13, 2.14)
+// Detaylı JSON dosyasını kullanarak tam oranları bul
+const aggregateDataWithTolerance = (detailedData: any, betType: string, targetOdd: number) => {
+  let total = 0
+  let hit = 0
+  
+  if (!detailedData?.hierarchical) return null
+  
+  // ±0.01 tolerans: targetOdd-0.01, targetOdd, targetOdd+0.01
+  const oddVariants = [
+    (targetOdd - 0.01).toFixed(2),
+    targetOdd.toFixed(2),
+    (targetOdd + 0.01).toFixed(2)
+  ]
+  
+  Object.values(detailedData.hierarchical).forEach((league: any) => {
+    const bet = league?.[betType]
+    if (!bet?.odds) return
+    
+    // Detaylı JSON'da oranlar tam sayı formatında (örn: "2.13") veya aralık formatında olabilir
+    oddVariants.forEach(oddStr => {
+      // Tam eşleşme ara
+      const exactMatch = bet.odds[oddStr]
+      if (exactMatch) {
+        total += exactMatch.total || 0
+        hit += exactMatch.hit || 0
+      }
+      
+      // Aralık formatında da ara (örn: "2.1-2.2" içinde 2.13 varsa)
+      Object.keys(bet.odds).forEach(rangeKey => {
+        if (rangeKey.includes('-')) {
+          const [lower, upper] = rangeKey.split('-').map(Number)
+          const oddValue = parseFloat(oddStr)
+          if (oddValue >= lower && oddValue <= upper) {
+            const rangeData = bet.odds[rangeKey]
+            if (rangeData) {
+              total += rangeData.total || 0
+              hit += rangeData.hit || 0
+            }
+          }
+        }
+      })
+    })
+  })
+  
+  if (total === 0) return null
+  
+  return {
+    total,
+    hit,
+    rate: (hit / total) * 100
+  }
+}
+
 // Tüm liglerden toplu veri topla (detaylı)
 const aggregateDetailedData = (detailedData: any, betType: string, targetOdd: number) => {
   const allOdds: Record<string, any> = {}
@@ -241,8 +295,53 @@ export async function POST(request: Request) {
     let totalDeep = 0
     let count = 0
 
-    // Her bahis türü için analiz yap - TÜM LİGLERDEN TOPLU VERİ
+    // MS1, MSX, MS2 için özel birleşik hesaplama
+    const msOdds: { key: string; betType: string; odd: number }[] = []
+    if (odds.H && typeof odds.H === 'number') msOdds.push({ key: 'H', betType: 'MS1', odd: odds.H })
+    if (odds.D && typeof odds.D === 'number') msOdds.push({ key: 'D', betType: 'MSX', odd: odds.D })
+    if (odds.A && typeof odds.A === 'number') msOdds.push({ key: 'A', betType: 'MS2', odd: odds.A })
+
+    // MS1, MSX, MS2 birleşik hesaplama
+    if (msOdds.length > 0) {
+      let msTotal = 0
+      let msHit = 0
+      const msOddsList: string[] = []
+
+      msOdds.forEach(({ betType, odd }) => {
+        // ±0.01 toleransla veri topla (detaylı JSON'dan)
+        const result = aggregateDataWithTolerance(detailedData, betType, odd)
+        if (result) {
+          msTotal += result.total
+          msHit += result.hit
+          msOddsList.push(`${betType} ${odd.toFixed(2)}`)
+        }
+      })
+
+      if (msTotal > 0) {
+        const msCombinedRate = (msHit / msTotal) * 100
+        analysis.push({
+          betType: 'MS1/MSX/MS2',
+          betKey: 'MS_COMBINED',
+          odd: msOdds.map(m => m.odd).join('/'),
+          oddRange: msOdds.map(m => `${(m.odd - 0.01).toFixed(2)}-${(m.odd + 0.01).toFixed(2)}`).join(', '),
+          superficial: {
+            total: msTotal,
+            hit: msHit,
+            rate: msCombinedRate
+          },
+          deep: null,
+          explanation: `MS1, MSX, MS2 birleşik analizi:\n\n📊 Toplam maç: ${msTotal.toLocaleString()}\n   • Tutmuş: ${msHit.toLocaleString()} maç (${msCombinedRate.toFixed(2)}%)\n   • Yatmış: ${(msTotal - msHit).toLocaleString()} maç (${(100 - msCombinedRate).toFixed(2)}%)\n\n💡 Bu analiz, MS1 (${msOdds.find(m => m.betType === 'MS1')?.odd.toFixed(2) || 'N/A'}), MSX (${msOdds.find(m => m.betType === 'MSX')?.odd.toFixed(2) || 'N/A'}), MS2 (${msOdds.find(m => m.betType === 'MS2')?.odd.toFixed(2) || 'N/A'}) oranlarının ±0.01 toleransla birleşik istatistiğidir.`
+        })
+        totalSuperficial += msCombinedRate
+        count++
+      }
+    }
+
+    // Diğer bahis türleri için normal analiz (KG, ÜST/ALT, vs.)
     Object.entries(odds).forEach(([betKey, oddValue]) => {
+      // MS1, MSX, MS2'yi atla, çünkü yukarıda birleşik hesapladık
+      if (betKey === 'H' || betKey === 'D' || betKey === 'A') return
+      
       if (typeof oddValue !== 'number' || isNaN(oddValue)) return
 
       const betType = betTypeMap[betKey]

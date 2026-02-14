@@ -322,11 +322,8 @@ export async function POST(request: Request) {
       }
     }
 
-    // Diğer bahis türleri için normal analiz (KG, ÜST/ALT, vs.)
+    // Tüm bahis türleri için normal analiz (MS1, MSX, MS2 dahil - ayrı ayrı göster)
     Object.entries(odds).forEach(([betKey, oddValue]) => {
-      // MS1, MSX, MS2'yi atla, çünkü yukarıda birleşik hesapladık
-      if (betKey === 'H' || betKey === 'D' || betKey === 'A') return
-      
       if (typeof oddValue !== 'number' || isNaN(oddValue)) return
 
       const betType = betTypeMap[betKey]

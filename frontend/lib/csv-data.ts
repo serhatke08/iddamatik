@@ -39,6 +39,8 @@ type FilterParams = {
   ms?: string | null
   odds_filters?: OddsFilters | null
   tolerance?: number
+  tolerance_plus?: Record<string, number> | null
+  tolerance_minus?: Record<string, number> | null
   limit?: number
 }
 
@@ -439,6 +441,8 @@ export const csvService = {
       ms,
       odds_filters,
       tolerance = 0.01,
+      tolerance_plus,
+      tolerance_minus,
       limit = 1000
     } = params
 
@@ -475,11 +479,30 @@ export const csvService = {
             ok = false
             break
           }
-          const target = Number(value.toFixed(2))
-          const actual = Number((odds[key] ?? 0).toFixed(2))
-          if (actual !== target) {
-            ok = false
-            break
+          const target = Number(value)
+          const actual = Number(odds[key] ?? 0)
+          
+          // Tolerans kontrolü
+          const plusTol = params.tolerance_plus?.[key] ?? 0
+          const minusTol = params.tolerance_minus?.[key] ?? 0
+          
+          if (plusTol === 0 && minusTol === 0) {
+            // Tolerans yoksa tam eşleşme
+            const targetFixed = Number(target.toFixed(2))
+            const actualFixed = Number(actual.toFixed(2))
+            if (actualFixed !== targetFixed) {
+              ok = false
+              break
+            }
+          } else {
+            // Tolerans varsa aralık kontrolü (örn: 2.5 +2 = 2.5, 2.6, 2.7)
+            const min = Number((target - minusTol * 0.1).toFixed(1))
+            const max = Number((target + plusTol * 0.1).toFixed(1))
+            const actualRounded = Number(actual.toFixed(1))
+            if (actualRounded < min || actualRounded > max) {
+              ok = false
+              break
+            }
           }
         }
         if (!ok) continue

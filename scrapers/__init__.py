@@ -1,3 +1,0 @@
-"""
-İddaa veri çekme modülleri
-"""

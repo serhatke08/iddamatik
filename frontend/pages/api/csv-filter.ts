@@ -35,12 +35,27 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     const limitParam = getQueryValue(req.query.limit)
 
     const oddsFilters: Record<string, number> = {}
+    const tolerancePlus: Record<string, number> = {}
+    const toleranceMinus: Record<string, number> = {}
     const oddsKeys = ['ms1', 'msx', 'ms2', 'o05', 'u05', 'o15', 'u15', 'o25', 'u25', 'o35', 'u35', 'o45', 'u45', 'kg_var', 'kg_yok']
 
     for (const key of oddsKeys) {
       const val = parseNumber(req.query[key])
       if (val !== null) {
         oddsFilters[key] = val
+      }
+      
+      // Tolerans değerleri
+      const plusKey = `${key}_plus`
+      const minusKey = `${key}_minus`
+      const plusVal = parseNumber(req.query[plusKey])
+      const minusVal = parseNumber(req.query[minusKey])
+      
+      if (plusVal !== null && plusVal >= 0) {
+        tolerancePlus[key] = plusVal
+      }
+      if (minusVal !== null && minusVal >= 0) {
+        toleranceMinus[key] = minusVal
       }
     }
 
@@ -59,6 +74,8 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       iy,
       ms,
       odds_filters: Object.keys(oddsFilters).length ? oddsFilters : null,
+      tolerance_plus: Object.keys(tolerancePlus).length ? tolerancePlus : null,
+      tolerance_minus: Object.keys(toleranceMinus).length ? toleranceMinus : null,
       limit: effectiveLimit
     })
 

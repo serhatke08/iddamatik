@@ -338,7 +338,7 @@ export default function AnalysisRobotPage() {
                         style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}
                       >
                         {item.betType}
-                      </th>
+                    </th>
                     ))}
                   </tr>
                 </thead>
@@ -346,7 +346,7 @@ export default function AnalysisRobotPage() {
                   {/* Oran satırı */}
                   <tr style={{ borderBottom: '1px solid #374151' }}>
                     <td style={{ padding: '12px', fontWeight: 600 }}>Oran</td>
-                    {analysisResult.analysis.map((item, idx) => (
+                  {analysisResult.analysis.map((item, idx) => (
                       <td key={idx} style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>
                         {item.odd.toFixed(2)}
                       </td>
@@ -366,15 +366,15 @@ export default function AnalysisRobotPage() {
                             <div>
                               <div style={{ fontSize: '18px', fontWeight: 'bold' }}>
                                 {item.superficial.rate.toFixed(2)}%
-                              </div>
+                            </div>
                               <div style={{ fontSize: '10px', color: '#9ca3af', marginTop: '4px' }}>
                                 {item.superficial.total} maç ({item.oddRange})
-                              </div>
                             </div>
-                          ) : (
+                            </div>
+                        ) : (
                             <span style={{ color: '#6b7280' }}>Veri yok</span>
-                          )}
-                        </td>
+                        )}
+                      </td>
                       )
                     })}
                   </tr>
@@ -395,11 +395,11 @@ export default function AnalysisRobotPage() {
                               </div>
                               <div style={{ fontSize: '10px', color: '#9ca3af', marginTop: '4px' }}>
                                 {item.deep.total} maç ({item.deep.odd})
-                              </div>
-                            </div>
-                          ) : (
+                          </div>
+                        </div>
+                      ) : (
                             <span style={{ color: '#6b7280' }}>Veri yok</span>
-                          )}
+                      )}
                         </td>
                       )
                     })}
@@ -433,7 +433,7 @@ export default function AnalysisRobotPage() {
                         </td>
                       )
                     })}
-                  </tr>
+                    </tr>
                 </tbody>
               </table>
 

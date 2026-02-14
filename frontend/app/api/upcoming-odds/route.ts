@@ -1,13 +1,49 @@
 import { NextResponse } from 'next/server'
 import { iddaaService } from '@/lib/iddaa-data'
+import { parse, format, isAfter, isToday, addDays } from 'date-fns'
 
 export async function GET(request: Request) {
   try {
     // İddaa Service'den bugünkü gelecek maçları çek
     const upcomingMatches = await iddaaService.getToday(500) // Son 500 maç
     
-    // Formatla
-    const formattedMatches = upcomingMatches.map((match) => {
+    // Şu anki tarih ve saat
+    const now = new Date()
+    const nowTime = now.getHours() * 60 + now.getMinutes() // Dakika cinsinden
+    
+    // Formatla ve geçmiş maçları filtrele
+    const formattedMatches = upcomingMatches
+      .filter((match) => {
+        // Status kontrolü
+        if (match.status === 'FINISHED') return false
+        
+        // Tarih ve saat kontrolü
+        try {
+          const matchDate = parse(match.date || '', 'dd/MM/yyyy', new Date())
+          const isMatchToday = isToday(matchDate) || isAfter(matchDate, now)
+          
+          if (!isMatchToday) return false // Gelecek günlerdeki maçlar
+          
+          // Bugünkü maçlar için saat kontrolü
+          if (isToday(matchDate) && match.time) {
+            const timeParts = match.time.split(':')
+            if (timeParts.length >= 2) {
+              const matchHours = parseInt(timeParts[0]) || 0
+              const matchMinutes = parseInt(timeParts[1]) || 0
+              const matchTime = matchHours * 60 + matchMinutes
+              
+              // Eğer maç saati geçmişteyse, filtrele (5 dakika tolerans)
+              if (matchTime < nowTime - 5) return false
+            }
+          }
+          
+          return true
+        } catch {
+          // Parse hatası olursa, maçı dahil et (güvenli tarafta kal)
+          return true
+        }
+      })
+      .map((match) => {
       // Lig ismini normalize et - iddaa-scrape'den gelen formatı koru
       let league = match.league || 'Bilinmeyen Lig'
 

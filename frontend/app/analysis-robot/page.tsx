@@ -72,12 +72,22 @@ interface AnalysisResponse {
   }
 }
 
+interface CouponPrediction {
+  match: UpcomingMatch
+  betType: string
+  betLabel: string
+  rate: number
+  recommendation: string
+}
+
 export default function AnalysisRobotPage() {
   const [matches, setMatches] = useState<UpcomingMatch[]>([])
   const [loading, setLoading] = useState(false)
   const [analyzingMatch, setAnalyzingMatch] = useState<string | null>(null)
   const [analysisResult, setAnalysisResult] = useState<AnalysisResponse | null>(null)
   const [hoveredBet, setHoveredBet] = useState<string | null>(null)
+  const [couponPredictions, setCouponPredictions] = useState<CouponPrediction[]>([])
+  const [analyzingCoupon, setAnalyzingCoupon] = useState(false)
 
   useEffect(() => {
     fetchMatches()
@@ -147,6 +157,90 @@ export default function AnalysisRobotPage() {
       console.error('Error fetching matches:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const analyzeCoupon = async () => {
+    if (matches.length === 0) return
+    
+    setAnalyzingCoupon(true)
+    setCouponPredictions([])
+    
+    const predictions: CouponPrediction[] = []
+    
+    try {
+      // Tüm maçları sırayla analiz et
+      for (let i = 0; i < matches.length; i++) {
+        const match = matches[i]
+        
+        try {
+          // Odds'u temizle
+          const cleanOdds: Record<string, number> = {}
+          Object.entries(match.odds || {}).forEach(([key, value]) => {
+            if (value !== null && value !== undefined && !isNaN(Number(value))) {
+              cleanOdds[key] = Number(value)
+            }
+          })
+          
+          if (Object.keys(cleanOdds).length === 0) continue
+          
+          // Analiz yap
+          const response = await axios.post('/api/analyze-odds', {
+            odds: cleanOdds
+          })
+          
+          if (response.data && response.data.generalAnalysis) {
+            const analysis = response.data.generalAnalysis
+            const pool = analysis.pool
+            
+            // En yüksek tutma oranını bul
+            const rates = [
+              { type: 'MS1', label: 'MS1', rate: pool.ms1Rate },
+              { type: 'MSX', label: 'MSX', rate: pool.msxRate },
+              { type: 'MS2', label: 'MS2', rate: pool.ms2Rate },
+              { type: 'KG_VAR', label: 'KG VAR', rate: pool.kgVar },
+              { type: 'KG_YOK', label: 'KG YOK', rate: pool.kgYok }
+            ]
+            
+            // Oranları sırala
+            rates.sort((a, b) => b.rate - a.rate)
+            const bestBet = rates[0]
+            
+            // %70 ve üstü tutma oranına sahip maçları ekle
+            if (bestBet.rate >= 70) {
+              let recommendation = ''
+              if (bestBet.rate >= 80) {
+                recommendation = '🔥 Çok güçlü tahmin!'
+              } else if (bestBet.rate >= 75) {
+                recommendation = '✅ Güçlü tahmin'
+              } else {
+                recommendation = '👍 İyi tahmin'
+              }
+              
+              predictions.push({
+                match,
+                betType: bestBet.type,
+                betLabel: bestBet.label,
+                rate: bestBet.rate,
+                recommendation
+              })
+            }
+          }
+        } catch (error) {
+          console.error(`Error analyzing match ${match.match_id}:`, error)
+          // Hata olsa bile devam et
+        }
+      }
+      
+      // Oranları yüksekten düşüğe sırala
+      predictions.sort((a, b) => b.rate - a.rate)
+      
+      setCouponPredictions(predictions)
+    } catch (error) {
+      console.error('Error analyzing coupon:', error)
+      alert('Kupon analizi sırasında bir hata oluştu.')
+    } finally {
+      setAnalyzingCoupon(false)
     }
   }
 
@@ -254,23 +348,116 @@ export default function AnalysisRobotPage() {
           Gelecek maçların oranlarını analiz edin ve tahmin yüzdelerini görün
         </p>
 
-        <button
-          onClick={fetchMatches}
-          disabled={loading}
-          style={{
-            padding: '8px 16px',
-            borderRadius: '6px',
-            backgroundColor: '#3b82f6',
-            color: 'white',
-            border: 'none',
-            cursor: loading ? 'not-allowed' : 'pointer',
-            fontSize: '14px',
-            opacity: loading ? 0.6 : 1
-          }}
-        >
-          {loading ? 'Yükleniyor...' : 'Maçları Yenile'}
-        </button>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <button
+            onClick={fetchMatches}
+            disabled={loading}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '6px',
+              backgroundColor: '#3b82f6',
+              color: 'white',
+              border: 'none',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              fontSize: '14px',
+              opacity: loading ? 0.6 : 1
+            }}
+          >
+            {loading ? 'Yükleniyor...' : 'Maçları Yenile'}
+          </button>
+          
+          <button
+            onClick={analyzeCoupon}
+            disabled={analyzingCoupon || matches.length === 0}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '6px',
+              backgroundColor: '#10b981',
+              color: 'white',
+              border: 'none',
+              cursor: (analyzingCoupon || matches.length === 0) ? 'not-allowed' : 'pointer',
+              fontSize: '14px',
+              opacity: (analyzingCoupon || matches.length === 0) ? 0.6 : 1,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            {analyzingCoupon ? (
+              <>
+                <span className="spinner" style={{
+                  width: '14px',
+                  height: '14px',
+                  border: '2px solid rgba(255, 255, 255, 0.3)',
+                  borderTop: '2px solid #ffffff',
+                  borderRadius: '50%',
+                  display: 'inline-block'
+                }}></span>
+                Analiz ediliyor...
+              </>
+            ) : (
+              '🎯 Kupon Tahmini Yap'
+            )}
+          </button>
+        </div>
       </div>
+
+      {/* Kupon Tahminleri */}
+      {couponPredictions.length > 0 && (
+        <div style={{ marginTop: '24px', padding: '20px', backgroundColor: '#111827', borderRadius: '8px', border: '2px solid #10b981' }}>
+          <h3 style={{ marginBottom: '16px', color: '#10b981', fontSize: '20px', fontWeight: 600 }}>
+            🎯 Kupon Tahminleri (%70+ Tutma Oranı)
+          </h3>
+          <p style={{ marginBottom: '16px', color: '#9ca3af', fontSize: '14px' }}>
+            {couponPredictions.length} maç bulundu. Aşağıdaki bahisleri oynayabilirsiniz:
+          </p>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid #374151', backgroundColor: '#1f2937' }}>
+                  <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600 }}>Lig</th>
+                  <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600 }}>Maç</th>
+                  <th style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>Tarih</th>
+                  <th style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>Saat</th>
+                  <th style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>Oynanacak</th>
+                  <th style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>Tutma Oranı</th>
+                  <th style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>Öneri</th>
+                </tr>
+              </thead>
+              <tbody>
+                {couponPredictions.map((pred, idx) => (
+                  <tr key={pred.match.match_id} style={{ borderBottom: '1px solid #374151' }}>
+                    <td style={{ padding: '12px' }}>{pred.match.league}</td>
+                    <td style={{ padding: '12px' }}>
+                      <strong>{pred.match.home_team}</strong> vs <strong>{pred.match.away_team}</strong>
+                    </td>
+                    <td style={{ padding: '12px', textAlign: 'center' }}>{pred.match.date}</td>
+                    <td style={{ padding: '12px', textAlign: 'center' }}>{pred.match.time}</td>
+                    <td style={{ padding: '12px', textAlign: 'center' }}>
+                      <span style={{
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        backgroundColor: pred.betType === 'MS1' ? '#10b981' : pred.betType === 'MSX' ? '#3b82f6' : pred.betType === 'MS2' ? '#ef4444' : '#f59e0b',
+                        color: 'white',
+                        fontWeight: 'bold',
+                        fontSize: '12px'
+                      }}>
+                        {pred.betLabel}
+                      </span>
+                    </td>
+                    <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', fontSize: '16px', color: '#10b981' }}>
+                      {pred.rate.toFixed(2)}%
+                    </td>
+                    <td style={{ padding: '12px', textAlign: 'center', fontSize: '12px', color: '#9ca3af' }}>
+                      {pred.recommendation}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {matches.length === 0 && !loading && (
         <div style={{ textAlign: 'center', padding: '40px', color: '#9ca3af' }}>

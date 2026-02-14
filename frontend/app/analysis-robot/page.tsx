@@ -19,9 +19,9 @@ interface UpcomingMatch {
 
 interface GeneralAnalysisItem {
   range: string
-  total: number
-  hit: number
-  rate: number
+    total: number
+    hit: number
+    rate: number
   kgVar: number
   kgYok: number
   iyKgVar: number
@@ -314,7 +314,19 @@ export default function AnalysisRobotPage() {
                         fontSize: '12px'
                       }}
                     >
-                      {analyzingMatch === match.match_id ? 'Analiz Ediliyor...' : 'Analiz Et'}
+                      {analyzingMatch === match.match_id ? (
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
+                          <span className="spinner" style={{
+                            width: '14px',
+                            height: '14px',
+                            border: '2px solid rgba(255, 255, 255, 0.3)',
+                            borderTop: '2px solid #ffffff',
+                            borderRadius: '50%',
+                            display: 'inline-block'
+                          }}></span>
+                          Analiz yapılıyor...
+                        </span>
+                      ) : 'Analiz Et'}
                     </button>
                   </td>
                   <td>{match.league}</td>
@@ -446,30 +458,30 @@ export default function AnalysisRobotPage() {
                 <div>
                   <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>MSX Yüzdesi</div>
                   <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#3b82f6' }}>{analysisResult.generalAnalysis.pool.msxRate.toFixed(2)}%</div>
-                </div>
+                        </div>
                 <div>
                   <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>MS2 Yüzdesi</div>
                   <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#ef4444' }}>{analysisResult.generalAnalysis.pool.ms2Rate.toFixed(2)}%</div>
-                </div>
+                        </div>
                 <div>
                   <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>KG VAR</div>
                   <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#e5e7eb' }}>{analysisResult.generalAnalysis.pool.kgVar.toFixed(2)}%</div>
-                </div>
+                        </div>
                 <div>
                   <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>KG YOK</div>
                   <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#e5e7eb' }}>{analysisResult.generalAnalysis.pool.kgYok.toFixed(2)}%</div>
-                </div>
+                            </div>
                 <div>
                   <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>İY KG VAR</div>
                   <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#e5e7eb' }}>{analysisResult.generalAnalysis.pool.iyKgVar.toFixed(2)}%</div>
-                </div>
+                            </div>
                 <div>
                   <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>İY KG YOK</div>
                   <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#e5e7eb' }}>{analysisResult.generalAnalysis.pool.iyKgYok.toFixed(2)}%</div>
-                </div>
-              </div>
-            </div>
-          </div>
+                            </div>
+                              </div>
+                          </div>
+                        </div>
 
           {/* Derinlemesine Analiz Tablosu */}
           <div style={{ marginBottom: '32px' }}>
@@ -499,7 +511,7 @@ export default function AnalysisRobotPage() {
                       MS2: {analysisResult.odds.ms2.toFixed(2)} ({analysisResult.deepAnalysis.ms2Count || 0} maç)<br/>
                       <span style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px', display: 'block' }}>
                         Havuz Toplam: {analysisResult.deepAnalysis.total.toLocaleString()} maç
-                      </span>
+                        </span>
                     </td>
                     <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold' }}>{analysisResult.deepAnalysis.total.toLocaleString()}</td>
                     <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', fontSize: '16px', color: '#10b981' }}>{analysisResult.deepAnalysis.ms1Rate.toFixed(2)}%</td>
@@ -509,7 +521,7 @@ export default function AnalysisRobotPage() {
                     <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.deepAnalysis.kgYok.toFixed(2)}%</td>
                     <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.deepAnalysis.iyKgVar.toFixed(2)}%</td>
                     <td style={{ padding: '12px', textAlign: 'center' }}>{analysisResult.deepAnalysis.iyKgYok.toFixed(2)}%</td>
-                  </tr>
+                    </tr>
                 </tbody>
               </table>
             </div>
@@ -553,10 +565,10 @@ export default function AnalysisRobotPage() {
 
       {analysisResult && !analysisResult.generalAnalysis && (
         <div id="analysis-results" style={{ marginTop: '32px', padding: '24px', backgroundColor: '#111827', borderRadius: '8px', border: '1px solid #374151' }}>
-          <div style={{ padding: '24px', textAlign: 'center', color: '#9ca3af' }}>
-            <p>Bu maç için analiz verisi bulunamadı.</p>
-            <p style={{ fontSize: '12px', marginTop: '8px' }}>Lütfen başka bir maç deneyin veya daha sonra tekrar kontrol edin.</p>
-          </div>
+            <div style={{ padding: '24px', textAlign: 'center', color: '#9ca3af' }}>
+              <p>Bu maç için analiz verisi bulunamadı.</p>
+              <p style={{ fontSize: '12px', marginTop: '8px' }}>Lütfen başka bir maç deneyin veya daha sonra tekrar kontrol edin.</p>
+            </div>
         </div>
       )}
     </div>

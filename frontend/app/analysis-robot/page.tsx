@@ -107,7 +107,8 @@ export default function AnalysisRobotPage() {
   const fetchMatches = async () => {
     setLoading(true)
     try {
-      const response = await axios.get('/api/upcoming-odds')
+      // Yeni API endpoint'i kullan
+      const response = await axios.get('/api/upcoming-matches?days=14')
       const allMatches = response.data.matches || []
       
       // Lig önceliği

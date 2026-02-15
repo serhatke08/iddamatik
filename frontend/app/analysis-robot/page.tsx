@@ -338,20 +338,19 @@ export default function AnalysisRobotPage() {
         const groups: CouponGroup[] = []
         
         console.log(`[Coupon Groups] Total predictions: ${predictions.length}`)
-        console.log(`[Coupon Groups] Sample predictions:`, predictions.slice(0, 3))
+        if (predictions.length > 0) {
+          console.log(`[Coupon Groups] Sample predictions:`, predictions.slice(0, 5).map(p => ({
+            rate: p.rate,
+            odd: p.odd,
+            betLabel: p.betLabel
+          })))
+        }
         
-        // Öbek 1: %70+ tutma oranı ve 1.20'den yüksek oranlar (Güvenli)
-        const group1 = predictions
-          .filter(p => {
-            const valid = p.rate >= 70 && p.odd && p.odd > 1.20
-            if (!valid && p.rate >= 70) {
-              console.log(`[Group1] Skipping: rate=${p.rate}, odd=${p.odd}`)
-            }
-            return valid
-          })
-          .slice(0, 10)
+        // Öbek 1: %70+ tutma oranı ve 1.20'den yüksek oranlar (Güvenli) - MAX 10 ama daha az da olabilir
+        const group1Candidates = predictions.filter(p => p.rate >= 70 && p.odd && p.odd > 1.20)
+        const group1 = group1Candidates.slice(0, Math.min(10, group1Candidates.length))
         
-        console.log(`[Group1] Found ${group1.length} matches`)
+        console.log(`[Group1] Found ${group1.length} matches (from ${group1Candidates.length} candidates)`)
         
         if (group1.length > 0) {
           const totalOdds = group1.reduce((acc, p) => acc * (p.odd || 1), 1)
@@ -364,20 +363,16 @@ export default function AnalysisRobotPage() {
           })
         }
         
-        // Öbek 2: %60-70 tutma oranı ve 1.30'dan yüksek oranlar (Orta Risk)
-        const group2 = predictions
-          .filter(p => {
-            const valid = p.rate >= 60 && p.rate < 70 && p.odd && p.odd > 1.30
-            return valid
-          })
-          .slice(0, 10)
+        // Öbek 2: %60-70 tutma oranı ve 1.25'ten yüksek oranlar (Orta Risk) - MAX 10 ama daha az da olabilir
+        const group2Candidates = predictions.filter(p => p.rate >= 60 && p.rate < 70 && p.odd && p.odd > 1.25)
+        const group2 = group2Candidates.slice(0, Math.min(10, group2Candidates.length))
         
-        console.log(`[Group2] Found ${group2.length} matches`)
+        console.log(`[Group2] Found ${group2.length} matches (from ${group2Candidates.length} candidates)`)
         
         if (group2.length > 0) {
           const totalOdds = group2.reduce((acc, p) => acc * (p.odd || 1), 1)
           groups.push({
-            title: '⚡ Orta Risk Kupon (%60-70 Tutma, 1.30+ Oran)',
+            title: '⚡ Orta Risk Kupon (%60-70 Tutma, 1.25+ Oran)',
             description: `${group2.length} maç seçildi`,
             predictions: group2,
             totalOdds: totalOdds,
@@ -385,20 +380,18 @@ export default function AnalysisRobotPage() {
           })
         }
         
-        // Öbek 3: %50-60 tutma oranı ve 1.50'den yüksek oranlar (Yüksek Risk)
-        const group3 = predictions
-          .filter(p => {
-            const valid = p.rate >= 50 && p.rate < 60 && p.odd && p.odd > 1.50
-            return valid
-          })
-          .slice(0, 10)
+        // Öbek 3: %50-60 tutma oranı ve 1.40'tan yüksek oranlar (Yüksek Risk) - MAX 10 ama daha az da olabilir
+        // En az 3 maç olmalı (2'den fazla kombinasyon)
+        const group3Candidates = predictions.filter(p => p.rate >= 50 && p.rate < 60 && p.odd && p.odd > 1.40)
+        const group3 = group3Candidates.slice(0, Math.min(10, group3Candidates.length))
         
-        console.log(`[Group3] Found ${group3.length} matches`)
+        console.log(`[Group3] Found ${group3.length} matches (from ${group3Candidates.length} candidates)`)
         
-        if (group3.length > 0) {
+        // En az 3 maç varsa göster (2'den fazla kombinasyon)
+        if (group3.length >= 3) {
           const totalOdds = group3.reduce((acc, p) => acc * (p.odd || 1), 1)
           groups.push({
-            title: '🚀 Yüksek Risk Kupon (%50-60 Tutma, 1.50+ Oran)',
+            title: '🚀 Yüksek Risk Kupon (%50-60 Tutma, 1.40+ Oran)',
             description: `${group3.length} maç seçildi`,
             predictions: group3,
             totalOdds: totalOdds,
@@ -407,6 +400,14 @@ export default function AnalysisRobotPage() {
         }
         
         console.log(`[Coupon Groups] Total groups created: ${groups.length}`)
+        
+        if (groups.length === 0) {
+          console.warn(`[Coupon Groups] No groups created! Total predictions: ${predictions.length}`)
+          if (predictions.length > 0) {
+            console.warn(`[Coupon Groups] Sample prediction rates:`, predictions.slice(0, 10).map(p => p.rate))
+            console.warn(`[Coupon Groups] Sample prediction odds:`, predictions.slice(0, 10).map(p => p.odd))
+          }
+        }
         
         setCouponGroups(groups)
         setCouponPredictions(predictions) // Eski formatı da tut (geriye dönük uyumluluk)

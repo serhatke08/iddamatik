@@ -15,14 +15,22 @@ export async function GET(request: Request) {
     const nowTime = now.getHours() * 60 + now.getMinutes() // Dakika cinsinden
     
     // Formatla - geçmiş maçları ve FINISHED olanları filtrele
+    const todayStr = format(now, 'dd/MM/yyyy')
+    console.log(`[upcoming-odds] Today: ${todayStr}, Now time: ${nowTime} minutes`)
+    console.log(`[upcoming-odds] Total matches from API: ${upcomingMatches.length}`)
+    
     const formattedMatches = upcomingMatches
       .filter((match) => {
         // Status kontrolü
-        if (match.status === 'FINISHED') return false
+        if (match.status === 'FINISHED') {
+          return false
+        }
         
         // Tarih kontrolü - sadece bugün ve gelecek tarihlerdeki maçları göster
         try {
-          if (!match.date) return true // Tarih yoksa göster
+          if (!match.date) {
+            return true // Tarih yoksa göster
+          }
           
           const matchDate = parse(match.date, 'dd/MM/yyyy', new Date())
           const today = startOfDay(now)
@@ -52,10 +60,12 @@ export async function GET(request: Request) {
           return true
         } catch (error) {
           // Parse hatası olursa, maçı göster (güvenli tarafta kal)
-          console.error('Date parse error:', error, match.date)
+          console.error('[upcoming-odds] Date parse error:', error, match.date)
           return true
         }
       })
+    
+    console.log(`[upcoming-odds] Filtered matches: ${formattedMatches.length}`)
       .map((match) => {
       // Lig ismini normalize et - iddaa-scrape'den gelen formatı koru
       let league = match.league || 'Bilinmeyen Lig'

@@ -237,14 +237,14 @@ export default function AnalysisRobotPage() {
             const pool = response.data.generalAnalysis.pool
             
             // Tüm bahis tiplerini kontrol et (MS1, MSX, MS2, KG VAR, KG YOK, İY KG VAR, İY KG YOK)
+            // Sadece odds'u olan bahis tiplerini kontrol et
+            // İY KG VAR/YOK'u çıkar çünkü bunların odds'u yok
             const rates = [
               { type: 'MS1', label: 'MS1', rate: pool.ms1Rate || 0 },
               { type: 'MSX', label: 'MSX', rate: pool.msxRate || 0 },
               { type: 'MS2', label: 'MS2', rate: pool.ms2Rate || 0 },
               { type: 'KG_VAR', label: 'KG VAR', rate: pool.kgVar || 0 },
-              { type: 'KG_YOK', label: 'KG YOK', rate: pool.kgYok || 0 },
-              { type: 'IY_KG_VAR', label: 'İY KG VAR', rate: pool.iyKgVar || 0 },
-              { type: 'IY_KG_YOK', label: 'İY KG YOK', rate: pool.iyKgYok || 0 }
+              { type: 'KG_YOK', label: 'KG YOK', rate: pool.kgYok || 0 }
             ]
             
             // Tüm bahis tiplerini kontrol et (%50+ olanlar)
@@ -325,7 +325,16 @@ export default function AnalysisRobotPage() {
       // Oranları yüksekten düşüğe sırala
       predictions.sort((a, b) => b.rate - a.rate)
       
-      console.log(`Coupon analysis complete: ${analyzedCount} analyzed, ${errorCount} errors, ${predictions.length} predictions found`)
+      console.log(`[Coupon Analysis] Complete: ${analyzedCount} analyzed, ${errorCount} errors, ${predictions.length} predictions found`)
+      
+      if (predictions.length > 0) {
+        console.log(`[Coupon Analysis] First 5 predictions:`, predictions.slice(0, 5).map(p => ({
+          rate: p.rate,
+          odd: p.odd,
+          betLabel: p.betLabel,
+          league: p.match.league
+        })))
+      }
       
       if (predictions.length === 0) {
         alert(`Analiz tamamlandı. ${analyzedCount} maç analiz edildi ancak uygun maç bulunamadı.`)

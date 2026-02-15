@@ -269,14 +269,11 @@ export default function AnalysisRobotPage() {
                 odd = match.odds.BTTSY || null
               } else if (bestBet.type === 'KG_YOK') {
                 odd = match.odds.BTTSN || null
-              } else if (bestBet.type === 'IY_KG_VAR' || bestBet.type === 'IY_KG_YOK') {
-                // İY KG için odds yoksa atla
-                odd = null
               }
               
               // Oran yoksa veya 1.0'dan küçükse atla
               if (!odd || odd < 1.0) {
-                console.log(`Skipping match ${match.match_id}: No valid odd for ${bestBet.label}`)
+                console.log(`Skipping match ${match.match_id}: No valid odd for ${bestBet.label} (odd: ${odd})`)
                 analyzedCount++
                 continue
               }

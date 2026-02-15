@@ -27,12 +27,17 @@ export async function GET(request: Request) {
           const today = startOfDay(now)
           const matchDay = startOfDay(matchDate)
           
-          // Geçmiş günlerdeki maçları filtrele
-          if (isBefore(matchDay, today)) {
+          // Sadece bugünden 2 gün öncesindeki maçları filtrele
+          // Bugün, yarın ve gelecek günlerdeki tüm maçları göster
+          const twoDaysAgo = new Date(today)
+          twoDaysAgo.setDate(twoDaysAgo.getDate() - 2)
+          const twoDaysAgoStart = startOfDay(twoDaysAgo)
+          
+          if (isBefore(matchDay, twoDaysAgoStart)) {
             return false
           }
           
-          // Bugünkü maçlar için saat kontrolü
+          // Bugünkü maçlar için saat kontrolü (sadece çok geçmiş saatlerdeki maçları filtrele)
           if (matchDay.getTime() === today.getTime() && match.time) {
             const timeParts = match.time.split(':')
             if (timeParts.length >= 2) {
@@ -40,8 +45,8 @@ export async function GET(request: Request) {
               const matchMinutes = parseInt(timeParts[1]) || 0
               const matchTime = matchHours * 60 + matchMinutes
               
-              // Eğer maç saati geçmişteyse, filtrele (60 dakika tolerans)
-              if (matchTime < nowTime - 60) {
+              // Bugünkü maçlar için sadece 3 saat öncesindeki maçları filtrele
+              if (matchTime < nowTime - 180) {
                 return false
               }
             }

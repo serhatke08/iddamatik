@@ -226,23 +226,31 @@ export default function AnalysisRobotPage() {
           if (response.data && response.data.generalAnalysis && response.data.generalAnalysis.pool) {
             const pool = response.data.generalAnalysis.pool
             
-            // En yüksek tutma oranını bul
+            // Tüm bahis tiplerini kontrol et (MS1, MSX, MS2, KG VAR, KG YOK, İY KG VAR, İY KG YOK)
             const rates = [
               { type: 'MS1', label: 'MS1', rate: pool.ms1Rate || 0 },
               { type: 'MSX', label: 'MSX', rate: pool.msxRate || 0 },
               { type: 'MS2', label: 'MS2', rate: pool.ms2Rate || 0 },
               { type: 'KG_VAR', label: 'KG VAR', rate: pool.kgVar || 0 },
-              { type: 'KG_YOK', label: 'KG YOK', rate: pool.kgYok || 0 }
+              { type: 'KG_YOK', label: 'KG YOK', rate: pool.kgYok || 0 },
+              { type: 'IY_KG_VAR', label: 'İY KG VAR', rate: pool.iyKgVar || 0 },
+              { type: 'IY_KG_YOK', label: 'İY KG YOK', rate: pool.iyKgYok || 0 }
             ]
             
-            // Oranları sırala
-            rates.sort((a, b) => b.rate - a.rate)
-            const bestBet = rates[0]
+            // %70 ve üstü olan tüm bahisleri bul
+            const validBets = rates.filter(bet => bet.rate >= 70)
             
-            // %70 ve üstü tutma oranına sahip maçları ekle
-            if (bestBet.rate >= 70) {
+            if (validBets.length > 0) {
+              // Oranları yüksekten düşüğe sırala
+              validBets.sort((a, b) => b.rate - a.rate)
+              
+              // En yüksek oranı al
+              const bestBet = validBets[0]
+              
               let recommendation = ''
-              if (bestBet.rate >= 80) {
+              if (bestBet.rate >= 90) {
+                recommendation = '🔥🔥🔥 Mükemmel tahmin!'
+              } else if (bestBet.rate >= 80) {
                 recommendation = '🔥 Çok güçlü tahmin!'
               } else if (bestBet.rate >= 75) {
                 recommendation = '✅ Güçlü tahmin'

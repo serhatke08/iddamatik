@@ -254,38 +254,71 @@ export default function AnalysisRobotPage() {
               // Oranları yüksekten düşüğe sırala
               validBets.sort((a, b) => b.rate - a.rate)
               
-              // En yüksek oranı al
+              // En yüksek oranı al, ama MS1'e öncelik verme
+              // Eğer birden fazla yüksek oran varsa, en yüksek olanı seç
               const bestBet = validBets[0]
+              
+              // Eğer en yüksek oran çok yakınsa (0.5% fark içinde), daha yüksek odd'a sahip olanı tercih et
+              if (validBets.length > 1 && validBets[0].rate - validBets[1].rate < 0.5) {
+                // İki bahis tipinin de oranlarını kontrol et
+                const bet1Odd = bestBet.type === 'MS1' ? (match.odds.H || 0) :
+                               bestBet.type === 'MSX' ? (match.odds.D || 0) :
+                               bestBet.type === 'MS2' ? (match.odds.A || 0) :
+                               bestBet.type === 'KG_VAR' ? (match.odds.BTTSY || 0) :
+                               (match.odds.BTTSN || 0)
+                
+                const bet2Odd = validBets[1].type === 'MS1' ? (match.odds.H || 0) :
+                               validBets[1].type === 'MSX' ? (match.odds.D || 0) :
+                               validBets[1].type === 'MS2' ? (match.odds.A || 0) :
+                               validBets[1].type === 'KG_VAR' ? (match.odds.BTTSY || 0) :
+                               (match.odds.BTTSN || 0)
+                
+                // Daha yüksek odd'a sahip olanı seç (daha iyi kazanç)
+                if (bet2Odd > bet1Odd && bet2Odd > 0) {
+                  const temp = validBets[0]
+                  validBets[0] = validBets[1]
+                  validBets[1] = temp
+                }
+              }
+              
+              const finalBestBet = validBets[0]
               
               // Oran değerini al (match.odds'dan)
               let odd: number | null = null
-              if (bestBet.type === 'MS1') {
+              if (finalBestBet.type === 'MS1') {
                 odd = match.odds.H || null
-              } else if (bestBet.type === 'MSX') {
+              } else if (finalBestBet.type === 'MSX') {
                 odd = match.odds.D || null
-              } else if (bestBet.type === 'MS2') {
+              } else if (finalBestBet.type === 'MS2') {
                 odd = match.odds.A || null
-              } else if (bestBet.type === 'KG_VAR') {
+              } else if (finalBestBet.type === 'KG_VAR') {
                 odd = match.odds.BTTSY || null
-              } else if (bestBet.type === 'KG_YOK') {
+              } else if (finalBestBet.type === 'KG_YOK') {
                 odd = match.odds.BTTSN || null
               }
               
               // Oran yoksa veya 1.0'dan küçükse atla
               if (!odd || odd < 1.0) {
-                console.log(`Skipping match ${match.match_id}: No valid odd for ${bestBet.label} (odd: ${odd})`)
+                console.log(`Skipping match ${match.match_id}: No valid odd for ${finalBestBet.label} (odd: ${odd})`)
+                analyzedCount++
+                continue
+              }
+              
+              // Sadece %60+ tutma oranına sahip bahisleri kabul et (daha güvenilir)
+              if (finalBestBet.rate < 60) {
+                console.log(`Skipping match ${match.match_id}: Rate too low (${finalBestBet.rate}%) for ${finalBestBet.label}`)
                 analyzedCount++
                 continue
               }
               
               let recommendation = ''
-              if (bestBet.rate >= 90) {
+              if (finalBestBet.rate >= 90) {
                 recommendation = '🔥🔥🔥 Mükemmel tahmin!'
-              } else if (bestBet.rate >= 80) {
+              } else if (finalBestBet.rate >= 80) {
                 recommendation = '🔥 Çok güçlü tahmin!'
-              } else if (bestBet.rate >= 75) {
+              } else if (finalBestBet.rate >= 75) {
                 recommendation = '✅ Güçlü tahmin'
-              } else if (bestBet.rate >= 60) {
+              } else if (finalBestBet.rate >= 70) {
                 recommendation = '👍 İyi tahmin'
               } else {
                 recommendation = '⚠️ Orta tahmin'
@@ -293,9 +326,9 @@ export default function AnalysisRobotPage() {
               
               predictions.push({
                 match,
-                betType: bestBet.type,
-                betLabel: bestBet.label,
-                rate: bestBet.rate,
+                betType: finalBestBet.type,
+                betLabel: finalBestBet.label,
+                rate: finalBestBet.rate,
                 recommendation,
                 odd
               })

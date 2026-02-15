@@ -1157,6 +1157,17 @@ export default function Home() {
 
   return (
     <div className="main-layout">
+      {/* Loading Overlay - Filtreleme için */}
+      {loading && (
+        <div className="loading-overlay">
+          <div className="loading-overlay-content">
+            <div className="loading-overlay-spinner"></div>
+            <div className="loading-overlay-text">
+              Sonuçlar getiriliyor...
+            </div>
+          </div>
+        </div>
+      )}
       {/* Sol Reklam - Desktop Only */}
       <div className="ad-left">
         <ins 

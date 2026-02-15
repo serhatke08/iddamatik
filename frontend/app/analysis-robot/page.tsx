@@ -173,12 +173,27 @@ export default function AnalysisRobotPage() {
     const predictions: CouponPrediction[] = []
     let analyzedCount = 0
     let errorCount = 0
+    let cancelled = false
+    
+    // Genel timeout - 5 dakika sonra iptal et
+    const globalTimeout = setTimeout(() => {
+      console.warn('[analyzeCoupon] Global timeout reached, cancelling...')
+      cancelled = true
+      setAnalyzingCoupon(false)
+      alert('Analiz çok uzun sürdü. Lütfen daha az maç ile tekrar deneyin.')
+    }, 300000) // 5 dakika
     
     try {
       console.log(`Starting coupon analysis for ${matches.length} matches...`)
       
       // Tüm maçları sırayla analiz et
       for (let i = 0; i < matches.length; i++) {
+        // İptal kontrolü
+        if (cancelled) {
+          console.log('[analyzeCoupon] Cancelled, breaking loop')
+          break
+        }
+        
         const match = matches[i]
         
         try {
@@ -284,6 +299,8 @@ export default function AnalysisRobotPage() {
       console.error('Error analyzing coupon:', error)
       alert(`Kupon analizi sırasında bir hata oluştu: ${error.message || 'Bilinmeyen hata'}`)
     } finally {
+      // Timeout'u temizle
+      clearTimeout(globalTimeout)
       // Her durumda loading'i kapat
       setAnalyzingCoupon(false)
       console.log('[analyzeCoupon] Finished, loading set to false')

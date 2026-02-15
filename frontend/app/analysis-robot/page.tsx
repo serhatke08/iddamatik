@@ -216,9 +216,11 @@ export default function AnalysisRobotPage() {
             continue
           }
           
-          // Analiz yap
+          // Analiz yap (10 saniye timeout)
           const response = await axios.post('/api/analyze-odds', {
             odds: cleanOdds
+          }, {
+            timeout: 10000 // 10 saniye timeout
           })
           
           if (response.data && response.data.generalAnalysis && response.data.generalAnalysis.pool) {

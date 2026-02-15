@@ -136,7 +136,7 @@ const extractOdds = (markets: any[]) => {
   return odds
 }
 
-export const fetchIddaaProgram = async (limit = 200): Promise<IddaaMatch[]> => {
+export const fetchIddaaProgram = async (limit = 2000): Promise<IddaaMatch[]> => {
   const eventsUrl = 'https://sportsbookv2.iddaa.com/sportsbook/events?st=1&type=0&version=0'
   const competitionsUrl = 'https://sportsbookv2.iddaa.com/sportsbook/competitions'
   const today = format(new Date(), 'dd/MM/yyyy')

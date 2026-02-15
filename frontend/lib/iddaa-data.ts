@@ -34,7 +34,7 @@ const writeMatches = (filePath: string, matches: IddaaMatch[]) => {
 }
 
 export const iddaaService = {
-  async syncToday(limit = 200) {
+  async syncToday(limit = 2000) {
     const filePath = getTodayFile()
     const matches = await fetchIddaaProgram(limit)
     writeMatches(filePath, matches)
@@ -48,7 +48,7 @@ export const iddaaService = {
     if (upcoming.length > 0) {
       return this.sortUpcoming(upcoming, limit)
     }
-    const { matches } = await this.syncToday(limit || 1000)
+    const { matches } = await this.syncToday(limit || 2000)
     return this.sortUpcoming(matches.filter((match) => match.status !== 'FINISHED'), limit)
   },
 

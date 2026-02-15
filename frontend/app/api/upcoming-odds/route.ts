@@ -4,8 +4,8 @@ import { parse, format, isAfter, isToday, isBefore, startOfDay } from 'date-fns'
 
 export async function GET(request: Request) {
   try {
-    // İddaa Service'den bugünkü gelecek maçları çek
-    const upcomingMatches = await iddaaService.getToday(500) // Son 500 maç
+    // İddaa Service'den gelecek maçları çek (limit artırıldı ve gelecek günler dahil)
+    const upcomingMatches = await iddaaService.getToday(2000) // Daha fazla maç çek
     
     // Şu anki tarih ve saat
     const now = new Date()

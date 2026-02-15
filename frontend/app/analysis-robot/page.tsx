@@ -78,6 +78,15 @@ interface CouponPrediction {
   betLabel: string
   rate: number
   recommendation: string
+  odd: number | null
+}
+
+interface CouponGroup {
+  title: string
+  description: string
+  predictions: CouponPrediction[]
+  totalOdds: number
+  potentialWin: number
 }
 
 export default function AnalysisRobotPage() {
@@ -87,6 +96,7 @@ export default function AnalysisRobotPage() {
   const [analysisResult, setAnalysisResult] = useState<AnalysisResponse | null>(null)
   const [hoveredBet, setHoveredBet] = useState<string | null>(null)
   const [couponPredictions, setCouponPredictions] = useState<CouponPrediction[]>([])
+  const [couponGroups, setCouponGroups] = useState<CouponGroup[]>([])
   const [analyzingCoupon, setAnalyzingCoupon] = useState(false)
 
   useEffect(() => {
@@ -487,60 +497,80 @@ export default function AnalysisRobotPage() {
         </div>
       </div>
 
-      {/* Kupon Tahminleri */}
-      {couponPredictions.length > 0 && (
-        <div data-coupon-predictions style={{ marginTop: '24px', padding: '20px', backgroundColor: '#111827', borderRadius: '8px', border: '2px solid #10b981' }}>
-          <h3 style={{ marginBottom: '16px', color: '#10b981', fontSize: '20px', fontWeight: 600 }}>
-            🎯 Kupon Tahminleri (%70+ Tutma Oranı)
-          </h3>
-          <p style={{ marginBottom: '16px', color: '#9ca3af', fontSize: '14px' }}>
-            {couponPredictions.length} maç bulundu. Aşağıdaki bahisleri oynayabilirsiniz:
-          </p>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-              <thead>
-                <tr style={{ borderBottom: '2px solid #374151', backgroundColor: '#1f2937' }}>
-                  <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600 }}>Lig</th>
-                  <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600 }}>Maç</th>
-                  <th style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>Tarih</th>
-                  <th style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>Saat</th>
-                  <th style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>Oynanacak</th>
-                  <th style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>Tutma Oranı</th>
-                  <th style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>Öneri</th>
-                </tr>
-              </thead>
-              <tbody>
-                {couponPredictions.map((pred, idx) => (
-                  <tr key={pred.match.match_id} style={{ borderBottom: '1px solid #374151' }}>
-                    <td style={{ padding: '12px' }}>{pred.match.league}</td>
-                    <td style={{ padding: '12px' }}>
-                      <strong>{pred.match.home_team}</strong> vs <strong>{pred.match.away_team}</strong>
-                    </td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>{pred.match.date}</td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>{pred.match.time}</td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>
-                      <span style={{
-                        padding: '4px 8px',
-                        borderRadius: '4px',
-                        backgroundColor: pred.betType === 'MS1' ? '#10b981' : pred.betType === 'MSX' ? '#3b82f6' : pred.betType === 'MS2' ? '#ef4444' : '#f59e0b',
-                        color: 'white',
-                        fontWeight: 'bold',
-                        fontSize: '12px'
-                      }}>
-                        {pred.betLabel}
-                      </span>
-                    </td>
-                    <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', fontSize: '16px', color: '#10b981' }}>
-                      {pred.rate.toFixed(2)}%
-                    </td>
-                    <td style={{ padding: '12px', textAlign: 'center', fontSize: '12px', color: '#9ca3af' }}>
-                      {pred.recommendation}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+      {/* Kupon Tahminleri - 3 Öbek */}
+      {couponGroups.length > 0 && (
+        <div data-coupon-predictions style={{ marginTop: '24px' }}>
+          {couponGroups.map((group, groupIdx) => (
+            <div key={groupIdx} style={{ marginBottom: '32px', padding: '20px', backgroundColor: '#111827', borderRadius: '8px', border: '2px solid #10b981' }}>
+              <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                <div>
+                  <h3 style={{ marginBottom: '4px', color: '#10b981', fontSize: '20px', fontWeight: 600 }}>
+                    {group.title}
+                  </h3>
+                  <p style={{ color: '#9ca3af', fontSize: '14px' }}>
+                    {group.description}
+                  </p>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '14px', color: '#9ca3af', marginBottom: '4px' }}>
+                    Toplam Oran: <strong style={{ color: '#3b82f6' }}>{group.totalOdds.toFixed(2)}</strong>
+                  </div>
+                  <div style={{ fontSize: '16px', color: '#10b981', fontWeight: 'bold' }}>
+                    50 TL ile: <strong>{group.potentialWin.toFixed(2)} TL</strong>
+                  </div>
+                </div>
+              </div>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '2px solid #374151', backgroundColor: '#1f2937' }}>
+                      <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600 }}>Lig</th>
+                      <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600 }}>Maç</th>
+                      <th style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>Tarih</th>
+                      <th style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>Saat</th>
+                      <th style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>Oynanacak</th>
+                      <th style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>Oran</th>
+                      <th style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>Tutma Oranı</th>
+                      <th style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>Öneri</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {group.predictions.map((pred, idx) => (
+                      <tr key={pred.match.match_id} style={{ borderBottom: '1px solid #374151' }}>
+                        <td style={{ padding: '12px' }}>{pred.match.league}</td>
+                        <td style={{ padding: '12px' }}>
+                          <strong>{pred.match.home_team}</strong> vs <strong>{pred.match.away_team}</strong>
+                        </td>
+                        <td style={{ padding: '12px', textAlign: 'center' }}>{pred.match.date}</td>
+                        <td style={{ padding: '12px', textAlign: 'center' }}>{pred.match.time}</td>
+                        <td style={{ padding: '12px', textAlign: 'center' }}>
+                          <span style={{
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            backgroundColor: pred.betType === 'MS1' ? '#10b981' : pred.betType === 'MSX' ? '#3b82f6' : pred.betType === 'MS2' ? '#ef4444' : '#f59e0b',
+                            color: 'white',
+                            fontWeight: 'bold',
+                            fontSize: '12px'
+                          }}>
+                            {pred.betLabel}
+                          </span>
+                        </td>
+                        <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', fontSize: '14px', color: '#fbbf24' }}>
+                          {pred.odd ? pred.odd.toFixed(2) : '-'}
+                        </td>
+                        <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', fontSize: '16px', color: '#10b981' }}>
+                          {pred.rate.toFixed(2)}%
+                        </td>
+                        <td style={{ padding: '12px', textAlign: 'center', fontSize: '12px', color: '#9ca3af' }}>
+                          {pred.recommendation}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 

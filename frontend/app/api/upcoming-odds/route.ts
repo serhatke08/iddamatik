@@ -19,7 +19,7 @@ export async function GET(request: Request) {
         // Status kontrolü
         if (match.status === 'FINISHED') return false
         
-        // Tarih kontrolü - geçmiş günlerdeki maçları filtrele
+        // Tarih kontrolü - sadece bugün ve gelecek tarihlerdeki maçları göster
         try {
           if (!match.date) return true // Tarih yoksa göster
           
@@ -27,17 +27,12 @@ export async function GET(request: Request) {
           const today = startOfDay(now)
           const matchDay = startOfDay(matchDate)
           
-          // Sadece bugünden 2 gün öncesindeki maçları filtrele
-          // Bugün, yarın ve gelecek günlerdeki tüm maçları göster
-          const twoDaysAgo = new Date(today)
-          twoDaysAgo.setDate(twoDaysAgo.getDate() - 2)
-          const twoDaysAgoStart = startOfDay(twoDaysAgo)
-          
-          if (isBefore(matchDay, twoDaysAgoStart)) {
+          // Geçmiş günlerdeki maçları filtrele (bugünden önceki günler)
+          if (isBefore(matchDay, today)) {
             return false
           }
           
-          // Bugünkü maçlar için saat kontrolü (sadece çok geçmiş saatlerdeki maçları filtrele)
+          // Bugünkü maçlar için saat kontrolü
           if (matchDay.getTime() === today.getTime() && match.time) {
             const timeParts = match.time.split(':')
             if (timeParts.length >= 2) {
@@ -45,14 +40,14 @@ export async function GET(request: Request) {
               const matchMinutes = parseInt(timeParts[1]) || 0
               const matchTime = matchHours * 60 + matchMinutes
               
-              // Bugünkü maçlar için sadece 3 saat öncesindeki maçları filtrele
-              if (matchTime < nowTime - 180) {
+              // Bugünkü maçlar için sadece geçmiş saatlerdeki maçları filtrele (30 dakika tolerans)
+              if (matchTime < nowTime - 30) {
                 return false
               }
             }
           }
           
-          // Bugün veya gelecek günlerdeki maçlar: göster
+          // Bugün (saat kontrolünden geçen) veya gelecek günlerdeki maçlar: göster
           return true
         } catch (error) {
           // Parse hatası olursa, maçı göster (güvenli tarafta kal)

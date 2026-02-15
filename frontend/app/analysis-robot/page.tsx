@@ -251,6 +251,10 @@ export default function AnalysisRobotPage() {
           console.error(`Error analyzing match ${match.match_id}:`, error)
           errorCount++
           // Hata olsa bile devam et
+          // Timeout veya network hatası olabilir, devam et
+          if (error.message === 'Timeout') {
+            console.warn(`Match ${match.match_id} timed out, skipping`)
+          }
         }
         
         // Her 10 maçta bir progress göster
@@ -280,7 +284,9 @@ export default function AnalysisRobotPage() {
       console.error('Error analyzing coupon:', error)
       alert(`Kupon analizi sırasında bir hata oluştu: ${error.message || 'Bilinmeyen hata'}`)
     } finally {
+      // Her durumda loading'i kapat
       setAnalyzingCoupon(false)
+      console.log('[analyzeCoupon] Finished, loading set to false')
     }
   }
 

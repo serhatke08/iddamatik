@@ -4,8 +4,10 @@ import { parse, format, isAfter, isToday, isBefore, startOfDay } from 'date-fns'
 
 export async function GET(request: Request) {
   try {
+    // Cache'i bypass et ve her zaman API'den yeni veri çek
     // İddaa Service'den gelecek maçları çek (limit artırıldı ve gelecek günler dahil)
-    const upcomingMatches = await iddaaService.getToday(2000) // Daha fazla maç çek
+    const { matches: freshMatches } = await iddaaService.syncToday(2000) // Her zaman yeni veri çek
+    const upcomingMatches = freshMatches.filter((match) => match.status !== 'FINISHED')
     
     // Şu anki tarih ve saat
     const now = new Date()

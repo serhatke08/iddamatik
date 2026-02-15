@@ -363,6 +363,18 @@ export default function AnalysisRobotPage() {
 
   return (
     <div className="container">
+      {/* Loading Overlay - Analiz ve Kupon Tahmini için */}
+      {(analyzingMatch || analyzingCoupon) && (
+        <div className="loading-overlay">
+          <div className="loading-overlay-content">
+            <div className="loading-overlay-spinner"></div>
+            <div className="loading-overlay-text">
+              {analyzingCoupon ? 'Kupon analizi yapılıyor...' : 'Sonuçlar getiriliyor...'}
+            </div>
+          </div>
+        </div>
+      )}
+      
       <nav className="navbar">
         <div className="navbar-content">
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -389,22 +401,22 @@ export default function AnalysisRobotPage() {
         </p>
 
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          <button
-            onClick={fetchMatches}
-            disabled={loading}
-            style={{
-              padding: '8px 16px',
-              borderRadius: '6px',
-              backgroundColor: '#3b82f6',
-              color: 'white',
-              border: 'none',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              fontSize: '14px',
-              opacity: loading ? 0.6 : 1
-            }}
-          >
-            {loading ? 'Yükleniyor...' : 'Maçları Yenile'}
-          </button>
+        <button
+          onClick={fetchMatches}
+          disabled={loading}
+          style={{
+            padding: '8px 16px',
+            borderRadius: '6px',
+            backgroundColor: '#3b82f6',
+            color: 'white',
+            border: 'none',
+            cursor: loading ? 'not-allowed' : 'pointer',
+            fontSize: '14px',
+            opacity: loading ? 0.6 : 1
+          }}
+        >
+          {loading ? 'Yükleniyor...' : 'Maçları Yenile'}
+        </button>
           
           <button
             onClick={analyzeCoupon}

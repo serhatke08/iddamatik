@@ -247,8 +247,8 @@ export default function AnalysisRobotPage() {
               { type: 'IY_KG_YOK', label: 'İY KG YOK', rate: pool.iyKgYok || 0 }
             ]
             
-            // %70 ve üstü olan tüm bahisleri bul
-            const validBets = rates.filter(bet => bet.rate >= 70)
+            // Tüm bahis tiplerini kontrol et (%50+ olanlar)
+            const validBets = rates.filter(bet => bet.rate >= 50)
             
             if (validBets.length > 0) {
               // Oranları yüksekten düşüğe sırala
@@ -257,6 +257,29 @@ export default function AnalysisRobotPage() {
               // En yüksek oranı al
               const bestBet = validBets[0]
               
+              // Oran değerini al (match.odds'dan)
+              let odd: number | null = null
+              if (bestBet.type === 'MS1') {
+                odd = match.odds.H || null
+              } else if (bestBet.type === 'MSX') {
+                odd = match.odds.D || null
+              } else if (bestBet.type === 'MS2') {
+                odd = match.odds.A || null
+              } else if (bestBet.type === 'KG_VAR') {
+                odd = match.odds.BTTSY || null
+              } else if (bestBet.type === 'KG_YOK') {
+                odd = match.odds.BTTSN || null
+              } else if (bestBet.type === 'IY_KG_VAR' || bestBet.type === 'IY_KG_YOK') {
+                // İY KG için odds yoksa atla
+                odd = null
+              }
+              
+              // Oran yoksa veya 1.0'dan küçükse atla
+              if (!odd || odd < 1.0) {
+                console.log(`Skipping match ${match.match_id}: No valid odd for ${bestBet.label}`)
+                continue
+              }
+              
               let recommendation = ''
               if (bestBet.rate >= 90) {
                 recommendation = '🔥🔥🔥 Mükemmel tahmin!'
@@ -264,8 +287,10 @@ export default function AnalysisRobotPage() {
                 recommendation = '🔥 Çok güçlü tahmin!'
               } else if (bestBet.rate >= 75) {
                 recommendation = '✅ Güçlü tahmin'
-              } else {
+              } else if (bestBet.rate >= 60) {
                 recommendation = '👍 İyi tahmin'
+              } else {
+                recommendation = '⚠️ Orta tahmin'
               }
               
               predictions.push({
@@ -273,7 +298,8 @@ export default function AnalysisRobotPage() {
                 betType: bestBet.type,
                 betLabel: bestBet.label,
                 rate: bestBet.rate,
-                recommendation
+                recommendation,
+                odd
               })
             }
             
@@ -304,9 +330,63 @@ export default function AnalysisRobotPage() {
       console.log(`Coupon analysis complete: ${analyzedCount} analyzed, ${errorCount} errors, ${predictions.length} predictions found`)
       
       if (predictions.length === 0) {
-        alert(`Analiz tamamlandı. ${analyzedCount} maç analiz edildi ancak %70+ tutma oranına sahip maç bulunamadı.`)
+        alert(`Analiz tamamlandı. ${analyzedCount} maç analiz edildi ancak uygun maç bulunamadı.`)
+        setCouponGroups([])
       } else {
-        setCouponPredictions(predictions)
+        // 3 öbeğe ayır
+        const groups: CouponGroup[] = []
+        
+        // Öbek 1: %70+ tutma oranı ve 1.20'den yüksek oranlar (Güvenli)
+        const group1 = predictions
+          .filter(p => p.rate >= 70 && p.odd && p.odd > 1.20)
+          .slice(0, 10)
+        
+        if (group1.length > 0) {
+          const totalOdds = group1.reduce((acc, p) => acc * (p.odd || 1), 1)
+          groups.push({
+            title: '🎯 Güvenli Kupon (%70+ Tutma, 1.20+ Oran)',
+            description: `${group1.length} maç seçildi`,
+            predictions: group1,
+            totalOdds: totalOdds,
+            potentialWin: 50 * totalOdds
+          })
+        }
+        
+        // Öbek 2: %60-70 tutma oranı (Orta Risk)
+        const group2 = predictions
+          .filter(p => p.rate >= 60 && p.rate < 70 && p.odd && p.odd > 1.30)
+          .slice(0, 10)
+        
+        if (group2.length > 0) {
+          const totalOdds = group2.reduce((acc, p) => acc * (p.odd || 1), 1)
+          groups.push({
+            title: '⚡ Orta Risk Kupon (%60-70 Tutma)',
+            description: `${group2.length} maç seçildi`,
+            predictions: group2,
+            totalOdds: totalOdds,
+            potentialWin: 50 * totalOdds
+          })
+        }
+        
+        // Öbek 3: %50-60 tutma oranı, 1.50'den yüksek oranlar (Yüksek Risk)
+        const group3 = predictions
+          .filter(p => p.rate >= 50 && p.rate < 60 && p.odd && p.odd > 1.50)
+          .slice(0, 10)
+        
+        if (group3.length > 0) {
+          const totalOdds = group3.reduce((acc, p) => acc * (p.odd || 1), 1)
+          groups.push({
+            title: '🚀 Yüksek Risk Kupon (%50-60 Tutma)',
+            description: `${group3.length} maç seçildi`,
+            predictions: group3,
+            totalOdds: totalOdds,
+            potentialWin: 50 * totalOdds
+          })
+        }
+        
+        setCouponGroups(groups)
+        setCouponPredictions(predictions) // Eski formatı da tut (geriye dönük uyumluluk)
+        
         // Sonuçlara scroll et
         setTimeout(() => {
           const element = document.querySelector('[data-coupon-predictions]')

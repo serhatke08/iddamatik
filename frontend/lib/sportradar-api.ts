@@ -178,22 +178,62 @@ export async function fetchUpcomingMatchesFromRapidAPI(days: number = 7): Promis
   }
 }
 
-// Ana fonksiyon: Önce RapidAPI dene, yoksa Football-Data.org kullan
+// Fallback: Mevcut iddaa API'sini kullan
+async function fetchFromIddaaFallback(): Promise<UpcomingMatch[]> {
+  try {
+    const { fetchIddaaProgram } = await import('./iddaa-scrape')
+    const matches = await fetchIddaaProgram(2000)
+    
+    return matches
+      .filter(m => m.status !== 'FINISHED')
+      .map(m => ({
+        match_id: m.match_id,
+        home_team: m.home_team,
+        away_team: m.away_team,
+        league: m.league,
+        country: '',
+        date: m.date,
+        time: m.time,
+        status: m.status || 'UPCOMING',
+        odds: {
+          H: m.odds.ms1 || null,
+          D: m.odds.msx || null,
+          A: m.odds.ms2 || null,
+          BTTSY: m.odds.kg_var || null,
+          BTTSN: m.odds.kg_yok || null,
+          O25: m.odds.o25 || null,
+          U25: m.odds.u25 || null
+        }
+      }))
+  } catch (error) {
+    console.error('Error fetching from iddaa fallback:', error)
+    return []
+  }
+}
+
+// Ana fonksiyon: Önce RapidAPI dene, yoksa Football-Data.org, son olarak iddaa
 export async function fetchUpcomingMatches(days: number = 7): Promise<UpcomingMatch[]> {
   // Önce RapidAPI'yi dene (daha fazla lig)
   if (RAPIDAPI_KEY) {
     const rapidMatches = await fetchUpcomingMatchesFromRapidAPI(days)
     if (rapidMatches.length > 0) {
+      console.log(`[sportradar-api] Fetched ${rapidMatches.length} matches from RapidAPI`)
       return rapidMatches
     }
   }
   
   // RapidAPI yoksa veya başarısız olursa Football-Data.org kullan
   if (FOOTBALL_DATA_API_KEY) {
-    return await fetchUpcomingMatchesFromFootballData(days)
+    const fdMatches = await fetchUpcomingMatchesFromFootballData(days)
+    if (fdMatches.length > 0) {
+      console.log(`[sportradar-api] Fetched ${fdMatches.length} matches from Football-Data.org`)
+      return fdMatches
+    }
   }
   
-  // API key yoksa boş döndür
-  console.warn('No API keys configured. Please set RAPIDAPI_KEY or FOOTBALL_DATA_API_KEY')
-  return []
+  // API key yoksa veya başarısız olursa iddaa fallback kullan
+  console.warn('[sportradar-api] No API keys or API failed, using iddaa fallback')
+  const iddaaMatches = await fetchFromIddaaFallback()
+  console.log(`[sportradar-api] Fetched ${iddaaMatches.length} matches from iddaa fallback`)
+  return iddaaMatches
 }

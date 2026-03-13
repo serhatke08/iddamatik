@@ -1212,15 +1212,18 @@ export default function Home() {
       <div className="banner-space" style={{ height: '100px', width: '100%' }}></div>
 
       {/* Filter Section */}
-      <div className="search-section">
+      {/* Üst satır container - Lig, Maç, Skor (mobilde gösterilecek) */}
+      <div className="search-section search-section-top">
         <div
-          className="filter-row"
+          className="filter-row filter-row-top"
           style={{
             fontSize: '11px',
-            columnGap: '2px',
-            display: 'grid',
-            gridTemplateColumns: '20% 5% 10% 10% 10% 10% 10% 5% 20%',
-            alignItems: 'start'
+            display: 'flex',
+            flexWrap: 'nowrap',
+            gap: '6px',
+            overflowX: 'auto',
+            alignItems: 'flex-start',
+            justifyContent: 'center'
           }}
         >
           <div className="filter-cell" style={{ minWidth: '200px' }}>
@@ -1259,286 +1262,97 @@ export default function Home() {
               )}
             </select>
           </div>
-          <div></div>
-          <div className="filter-cell" style={{ marginRight: '-2px' }}>
-            <div className="filter-label" style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>
-              Maç
-              <div
-                data-tooltip-container
-                style={{
-                  position: 'relative',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setOpenTooltip(openTooltip === 'match' ? null : 'match')
-                  }}
-                  onMouseEnter={() => setOpenTooltip('match')}
-                  onMouseLeave={() => setOpenTooltip(null)}
-                  style={{
-                    width: '18px',
-                    height: '18px',
-                    borderRadius: '50%',
-                    background: 'rgba(59, 130, 246, 0.2)',
-                    border: '1px solid rgba(59, 130, 246, 0.4)',
-                    color: '#60a5fa',
-                    fontSize: '12px',
-                    fontWeight: 'bold',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: 0,
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.background = 'rgba(59, 130, 246, 0.3)'
-                    e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.6)'
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)'
-                    e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.4)'
-                  }}
-                >
-                  ?
-                </button>
-                {openTooltip === 'match' && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      bottom: 'calc(100% + 8px)',
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      padding: '8px 12px',
-                      background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.98) 100%)',
-                      border: '1px solid rgba(59, 130, 246, 0.4)',
-                      borderRadius: '8px',
-                      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
-                      zIndex: 9999,
-                      minWidth: '220px',
-                      maxWidth: '280px',
-                      fontSize: '11px',
-                      lineHeight: 1.5,
-                      color: '#d1d5db',
-                      pointerEvents: 'auto',
-                      wordWrap: 'break-word',
-                      overflowWrap: 'break-word',
-                      whiteSpace: 'normal'
-                    }}
-                    onMouseEnter={() => setOpenTooltip('match')}
-                    onMouseLeave={() => setOpenTooltip(null)}
-                  >
-                    <div style={{ fontWeight: 600, color: '#60a5fa', marginBottom: '6px', fontSize: '12px' }}>
-                      {filterTooltips.match.title}
-                    </div>
-                    <div style={{ marginBottom: '8px' }}>
-                      {filterTooltips.match.description}
-                    </div>
-                    <div style={{ padding: '6px', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '4px', fontSize: '10px', color: '#93c5fd' }}>
-                      {filterTooltips.match.example}
-                    </div>
-                  </div>
-                )}
-              </div>
+          <div
+            className="filter-input-box"
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '1px',
+              padding: '3px 5px',
+              borderRadius: '5px',
+              backgroundColor: '#020617'
+            }}
+          >
+            <div style={{ fontWeight: 600, fontSize: '10px' }}>Maç</div>
+            <div style={{ fontSize: '8px', lineHeight: 1.1, color: '#9ca3af', textAlign: 'center' }}>
+              Takım adı
             </div>
             <input
               className="search-input compact filter-input-short"
               placeholder=""
               value={matchFilter}
               onChange={(e) => setMatchFilter(e.target.value)}
+              style={{ padding: '3px', fontSize: '10px', width: '100%' }}
             />
           </div>
-          <div className="filter-cell" style={{ marginLeft: '-2px', marginRight: '-2px' }}>
-            <div className="filter-label" style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>
-              Skor
-              <div
-                data-tooltip-container
-                style={{
-                  position: 'relative',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setOpenTooltip(openTooltip === 'score' ? null : 'score')
-                  }}
-                  onMouseEnter={() => setOpenTooltip('score')}
-                  onMouseLeave={() => setOpenTooltip(null)}
-                  style={{
-                    width: '18px',
-                    height: '18px',
-                    borderRadius: '50%',
-                    background: 'rgba(59, 130, 246, 0.2)',
-                    border: '1px solid rgba(59, 130, 246, 0.4)',
-                    color: '#60a5fa',
-                    fontSize: '12px',
-                    fontWeight: 'bold',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: 0,
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.background = 'rgba(59, 130, 246, 0.3)'
-                    e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.6)'
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)'
-                    e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.4)'
-                  }}
-                >
-                  ?
-                </button>
-                {openTooltip === 'score' && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      bottom: 'calc(100% + 8px)',
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      padding: '8px 12px',
-                      background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.98) 100%)',
-                      border: '1px solid rgba(59, 130, 246, 0.4)',
-                      borderRadius: '8px',
-                      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
-                      zIndex: 9999,
-                      minWidth: '220px',
-                      maxWidth: '280px',
-                      wordWrap: 'break-word',
-                      overflowWrap: 'break-word',
-                      whiteSpace: 'normal',
-                      pointerEvents: 'auto',
-                      fontSize: '11px',
-                      lineHeight: 1.5,
-                      color: '#d1d5db'
-                    }}
-                    onMouseEnter={() => setOpenTooltip('score')}
-                    onMouseLeave={() => setOpenTooltip(null)}
-                  >
-                    <div style={{ fontWeight: 600, color: '#60a5fa', marginBottom: '6px', fontSize: '12px' }}>
-                      {filterTooltips.score.title}
-                    </div>
-                    <div style={{ marginBottom: '8px' }}>
-                      {filterTooltips.score.description}
-                    </div>
-                    <div style={{ padding: '6px', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '4px', fontSize: '10px', color: '#93c5fd' }}>
-                      {filterTooltips.score.example}
-                    </div>
-                  </div>
-                )}
-              </div>
+          <div
+            className="filter-input-box"
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '1px',
+              padding: '3px 5px',
+              borderRadius: '5px',
+              backgroundColor: '#020617'
+            }}
+          >
+            <div style={{ fontWeight: 600, fontSize: '10px' }}>Skor</div>
+            <div style={{ fontSize: '8px', lineHeight: 1.1, color: '#9ca3af', textAlign: 'center' }}>
+              Maç skoru
             </div>
             <input
               className="search-input compact filter-input-short"
               placeholder=""
               value={scoreFilter}
               onChange={(e) => setScoreFilter(e.target.value)}
+              style={{ padding: '3px', fontSize: '10px', width: '100%' }}
             />
           </div>
-          <div className="filter-cell" style={{ marginLeft: '-2px', marginRight: '-2px' }}>
-            <div className="filter-label" style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>
-              MS1
-              <div
-                data-tooltip-container
-                style={{
-                  position: 'relative',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setOpenTooltip(openTooltip === 'ms1' ? null : 'ms1')
-                  }}
-                  onMouseEnter={() => setOpenTooltip('ms1')}
-                  onMouseLeave={() => setOpenTooltip(null)}
-                  style={{
-                    width: '18px',
-                    height: '18px',
-                    borderRadius: '50%',
-                    background: 'rgba(59, 130, 246, 0.2)',
-                    border: '1px solid rgba(59, 130, 246, 0.4)',
-                    color: '#60a5fa',
-                    fontSize: '12px',
-                    fontWeight: 'bold',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: 0,
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.background = 'rgba(59, 130, 246, 0.3)'
-                    e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.6)'
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)'
-                    e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.4)'
-                  }}
-                >
-                  ?
-                </button>
-                {openTooltip === 'ms1' && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      bottom: 'calc(100% + 8px)',
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      padding: '8px 12px',
-                      background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.98) 100%)',
-                      border: '1px solid rgba(59, 130, 246, 0.4)',
-                      borderRadius: '8px',
-                      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
-                      zIndex: 9999,
-                      minWidth: '220px',
-                      maxWidth: '280px',
-                      wordWrap: 'break-word',
-                      overflowWrap: 'break-word',
-                      whiteSpace: 'normal',
-                      pointerEvents: 'auto',
-                      fontSize: '11px',
-                      lineHeight: 1.5,
-                      color: '#d1d5db'
-                    }}
-                    onMouseEnter={() => setOpenTooltip('ms1')}
-                    onMouseLeave={() => setOpenTooltip(null)}
-                  >
-                    <div style={{ fontWeight: 600, color: '#60a5fa', marginBottom: '6px', fontSize: '12px' }}>
-                      {filterTooltips.ms1.title}
-                    </div>
-                    <div style={{ marginBottom: '8px' }}>
-                      {filterTooltips.ms1.description}
-                    </div>
-                    <div style={{ padding: '6px', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '4px', fontSize: '10px', color: '#93c5fd' }}>
-                      {filterTooltips.ms1.example}
-                    </div>
-                  </div>
-                )}
-              </div>
+        </div>
+      </div>
+        
+      {/* Orta satır container - Desktop'ta tüm inputlar, mobilde MS1, MSX, MS2, KG Var, KG Yok */}
+      <div className="search-section search-section-middle">
+        <div
+          className="filter-row filter-row-bottom"
+          style={{
+            fontSize: '11px',
+            display: 'flex',
+            flexWrap: 'nowrap',
+            gap: '6px',
+            overflowX: 'auto',
+            alignItems: 'flex-start',
+            justifyContent: 'center'
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '1px',
+              padding: '3px 5px',
+              borderRadius: '5px',
+              backgroundColor: '#020617'
+            }}
+          >
+            <div style={{ fontWeight: 600, fontSize: '10px' }}>MS1</div>
+            <div style={{ fontSize: '8px', lineHeight: 1.1, color: '#9ca3af', textAlign: 'center' }}>
+              Ev sahibi kazanır
             </div>
             <input
               className="search-input compact filter-input-short"
               placeholder=""
               value={oddsFilters.ms1 || ''}
               onChange={(e) => updateOddsFilter('ms1', e.target.value)}
+              style={{ padding: '3px', fontSize: '10px', width: '100%' }}
             />
-            <div style={{ display: 'flex', gap: '2px', marginTop: '4px' }}>
+            <div style={{ display: 'flex', gap: '2px', marginTop: '3px', width: '100%' }}>
               <select
                 className="search-input compact"
-                style={{ width: '50%', padding: '4px', fontSize: '10px' }}
+                style={{ width: '50%', padding: '3px', fontSize: '9px' }}
                 value={tolerancePlus['ms1'] ?? 0}
                 onChange={(e) => setTolerancePlus(prev => ({ ...prev, ms1: Number(e.target.value) }))}
                 title="Üst tolerans"
@@ -1547,110 +1361,41 @@ export default function Home() {
               </select>
               <select
                 className="search-input compact"
-                style={{ width: '50%', padding: '4px', fontSize: '10px' }}
+                style={{ width: '50%', padding: '3px', fontSize: '9px' }}
                 value={toleranceMinus['ms1'] ?? 0}
                 onChange={(e) => setToleranceMinus(prev => ({ ...prev, ms1: Number(e.target.value) }))}
                 title="Alt tolerans"
               >
                 {[0, 1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n === 0 ? '-' : `-${n}`}</option>)}
               </select>
+            </div>
           </div>
-          </div>
-          <div className="filter-cell" style={{ marginLeft: '-2px', marginRight: '-2px' }}>
-            <div className="filter-label" style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>
-              MSX
-              <div
-                data-tooltip-container
-                style={{
-                  position: 'relative',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setOpenTooltip(openTooltip === 'msx' ? null : 'msx')
-                  }}
-                  onMouseEnter={() => setOpenTooltip('msx')}
-                  onMouseLeave={() => setOpenTooltip(null)}
-                  style={{
-                    width: '18px',
-                    height: '18px',
-                    borderRadius: '50%',
-                    background: 'rgba(59, 130, 246, 0.2)',
-                    border: '1px solid rgba(59, 130, 246, 0.4)',
-                    color: '#60a5fa',
-                    fontSize: '12px',
-                    fontWeight: 'bold',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: 0,
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.background = 'rgba(59, 130, 246, 0.3)'
-                    e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.6)'
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)'
-                    e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.4)'
-                  }}
-                >
-                  ?
-                </button>
-                {openTooltip === 'msx' && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      bottom: 'calc(100% + 8px)',
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      padding: '8px 12px',
-                      background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.98) 100%)',
-                      border: '1px solid rgba(59, 130, 246, 0.4)',
-                      borderRadius: '8px',
-                      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
-                      zIndex: 9999,
-                      minWidth: '220px',
-                      maxWidth: '280px',
-                      wordWrap: 'break-word',
-                      overflowWrap: 'break-word',
-                      whiteSpace: 'normal',
-                      pointerEvents: 'auto',
-                      fontSize: '11px',
-                      lineHeight: 1.5,
-                      color: '#d1d5db'
-                    }}
-                    onMouseEnter={() => setOpenTooltip('msx')}
-                    onMouseLeave={() => setOpenTooltip(null)}
-                  >
-                    <div style={{ fontWeight: 600, color: '#60a5fa', marginBottom: '6px', fontSize: '12px' }}>
-                      {filterTooltips.msx.title}
-                    </div>
-                    <div style={{ marginBottom: '8px' }}>
-                      {filterTooltips.msx.description}
-                    </div>
-                    <div style={{ padding: '6px', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '4px', fontSize: '10px', color: '#93c5fd' }}>
-                      {filterTooltips.msx.example}
-                    </div>
-                  </div>
-                )}
-              </div>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '1px',
+              padding: '3px 5px',
+              borderRadius: '5px',
+              backgroundColor: '#020617'
+            }}
+          >
+            <div style={{ fontWeight: 600, fontSize: '10px' }}>MSX</div>
+            <div style={{ fontSize: '8px', lineHeight: 1.1, color: '#9ca3af', textAlign: 'center' }}>
+              Beraberlik
             </div>
             <input
               className="search-input compact filter-input-short"
               placeholder=""
               value={oddsFilters.msx || ''}
               onChange={(e) => updateOddsFilter('msx', e.target.value)}
+              style={{ padding: '3px', fontSize: '10px', width: '100%' }}
             />
-            <div style={{ display: 'flex', gap: '2px', marginTop: '4px' }}>
+            <div style={{ display: 'flex', gap: '2px', marginTop: '3px', width: '100%' }}>
               <select
                 className="search-input compact"
-                style={{ width: '50%', padding: '4px', fontSize: '10px' }}
+                style={{ width: '50%', padding: '3px', fontSize: '9px' }}
                 value={tolerancePlus['msx'] ?? 0}
                 onChange={(e) => setTolerancePlus(prev => ({ ...prev, msx: Number(e.target.value) }))}
                 title="Üst tolerans"
@@ -1659,110 +1404,41 @@ export default function Home() {
               </select>
               <select
                 className="search-input compact"
-                style={{ width: '50%', padding: '4px', fontSize: '10px' }}
+                style={{ width: '50%', padding: '3px', fontSize: '9px' }}
                 value={toleranceMinus['msx'] ?? 0}
                 onChange={(e) => setToleranceMinus(prev => ({ ...prev, msx: Number(e.target.value) }))}
                 title="Alt tolerans"
               >
                 {[0, 1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n === 0 ? '-' : `-${n}`}</option>)}
               </select>
+            </div>
           </div>
-          </div>
-          <div className="filter-cell" style={{ marginLeft: '-2px' }}>
-            <div className="filter-label" style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>
-              MS2
-              <div
-                data-tooltip-container
-                style={{
-                  position: 'relative',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setOpenTooltip(openTooltip === 'ms2' ? null : 'ms2')
-                  }}
-                  onMouseEnter={() => setOpenTooltip('ms2')}
-                  onMouseLeave={() => setOpenTooltip(null)}
-                  style={{
-                    width: '18px',
-                    height: '18px',
-                    borderRadius: '50%',
-                    background: 'rgba(59, 130, 246, 0.2)',
-                    border: '1px solid rgba(59, 130, 246, 0.4)',
-                    color: '#60a5fa',
-                    fontSize: '12px',
-                    fontWeight: 'bold',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: 0,
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.background = 'rgba(59, 130, 246, 0.3)'
-                    e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.6)'
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)'
-                    e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.4)'
-                  }}
-                >
-                  ?
-                </button>
-                {openTooltip === 'ms2' && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      bottom: 'calc(100% + 8px)',
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      padding: '8px 12px',
-                      background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.98) 100%)',
-                      border: '1px solid rgba(59, 130, 246, 0.4)',
-                      borderRadius: '8px',
-                      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
-                      zIndex: 9999,
-                      minWidth: '220px',
-                      maxWidth: '280px',
-                      wordWrap: 'break-word',
-                      overflowWrap: 'break-word',
-                      whiteSpace: 'normal',
-                      pointerEvents: 'auto',
-                      fontSize: '11px',
-                      lineHeight: 1.5,
-                      color: '#d1d5db'
-                    }}
-                    onMouseEnter={() => setOpenTooltip('ms2')}
-                    onMouseLeave={() => setOpenTooltip(null)}
-                  >
-                    <div style={{ fontWeight: 600, color: '#60a5fa', marginBottom: '6px', fontSize: '12px' }}>
-                      {filterTooltips.ms2.title}
-                    </div>
-                    <div style={{ marginBottom: '8px' }}>
-                      {filterTooltips.ms2.description}
-                    </div>
-                    <div style={{ padding: '6px', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '4px', fontSize: '10px', color: '#93c5fd' }}>
-                      {filterTooltips.ms2.example}
-                    </div>
-                  </div>
-                )}
-              </div>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '1px',
+              padding: '3px 5px',
+              borderRadius: '5px',
+              backgroundColor: '#020617'
+            }}
+          >
+            <div style={{ fontWeight: 600, fontSize: '10px' }}>MS2</div>
+            <div style={{ fontSize: '8px', lineHeight: 1.1, color: '#9ca3af', textAlign: 'center' }}>
+              Deplasman kazanır
             </div>
             <input
               className="search-input compact filter-input-short"
               placeholder=""
               value={oddsFilters.ms2 || ''}
               onChange={(e) => updateOddsFilter('ms2', e.target.value)}
+              style={{ padding: '3px', fontSize: '10px', width: '100%' }}
             />
-            <div style={{ display: 'flex', gap: '2px', marginTop: '4px' }}>
+            <div style={{ display: 'flex', gap: '2px', marginTop: '3px', width: '100%' }}>
               <select
                 className="search-input compact"
-                style={{ width: '50%', padding: '4px', fontSize: '10px' }}
+                style={{ width: '50%', padding: '3px', fontSize: '9px' }}
                 value={tolerancePlus['ms2'] ?? 0}
                 onChange={(e) => setTolerancePlus(prev => ({ ...prev, ms2: Number(e.target.value) }))}
                 title="Üst tolerans"
@@ -1771,255 +1447,108 @@ export default function Home() {
               </select>
               <select
                 className="search-input compact"
-                style={{ width: '50%', padding: '4px', fontSize: '10px' }}
+                style={{ width: '50%', padding: '3px', fontSize: '9px' }}
                 value={toleranceMinus['ms2'] ?? 0}
                 onChange={(e) => setToleranceMinus(prev => ({ ...prev, ms2: Number(e.target.value) }))}
                 title="Alt tolerans"
               >
                 {[0, 1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n === 0 ? '-' : `-${n}`}</option>)}
               </select>
+            </div>
           </div>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '1px',
+              padding: '3px 5px',
+              borderRadius: '5px',
+              backgroundColor: '#020617'
+            }}
+          >
+            <div style={{ fontWeight: 600, fontSize: '10px' }}>KG Var</div>
+            <div style={{ fontSize: '8px', lineHeight: 1.1, color: '#9ca3af', textAlign: 'center' }}>
+              Karşılıklı gol
+            </div>
+            <input
+              className="search-input compact filter-input-short"
+              placeholder=""
+              value={oddsFilters.kg_var || ''}
+              onChange={(e) => updateOddsFilter('kg_var', e.target.value)}
+              style={{ padding: '3px', fontSize: '10px', width: '100%' }}
+            />
+            <div style={{ display: 'flex', gap: '2px', marginTop: '3px', width: '100%' }}>
+              <select
+                className="search-input compact"
+                style={{ width: '50%', padding: '3px', fontSize: '9px' }}
+                value={tolerancePlus['kg_var'] ?? 0}
+                onChange={(e) => setTolerancePlus(prev => ({ ...prev, kg_var: Number(e.target.value) }))}
+                title="Üst tolerans"
+              >
+                {[0, 1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n === 0 ? '+' : `+${n}`}</option>)}
+              </select>
+              <select
+                className="search-input compact"
+                style={{ width: '50%', padding: '3px', fontSize: '9px' }}
+                value={toleranceMinus['kg_var'] ?? 0}
+                onChange={(e) => setToleranceMinus(prev => ({ ...prev, kg_var: Number(e.target.value) }))}
+                title="Alt tolerans"
+              >
+                {[0, 1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n === 0 ? '-' : `-${n}`}</option>)}
+              </select>
+            </div>
           </div>
-          <div></div>
-          <div className="filter-cell" style={{ minWidth: '200px', maxWidth: '100%' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', columnGap: '20px', alignItems: 'start' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-                <div className="filter-label" style={{ textAlign: 'center', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>
-                  KG Var
-                  <div
-                    data-tooltip-container
-              style={{
-                      position: 'relative',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}
-                  >
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setOpenTooltip(openTooltip === 'kg_var' ? null : 'kg_var')
-                      }}
-                      onMouseEnter={() => setOpenTooltip('kg_var')}
-                      onMouseLeave={() => setOpenTooltip(null)}
-                      style={{
-                        width: '18px',
-                        height: '18px',
-                        borderRadius: '50%',
-                        background: 'rgba(59, 130, 246, 0.2)',
-                        border: '1px solid rgba(59, 130, 246, 0.4)',
-                        color: '#60a5fa',
-                        fontSize: '12px',
-                        fontWeight: 'bold',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        padding: 0,
-                        transition: 'all 0.2s'
-                      }}
-                      onMouseOver={(e) => {
-                        e.currentTarget.style.background = 'rgba(59, 130, 246, 0.3)'
-                        e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.6)'
-                      }}
-                      onMouseOut={(e) => {
-                        e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)'
-                        e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.4)'
-                      }}
-                    >
-                      ?
-                    </button>
-                    {openTooltip === 'kg_var' && (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          bottom: 'calc(100% + 8px)',
-                          left: '50%',
-                          transform: 'translateX(-50%)',
-                          padding: '8px 12px',
-                          background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.98) 100%)',
-                          border: '1px solid rgba(59, 130, 246, 0.4)',
-                          borderRadius: '8px',
-                          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
-                          zIndex: 9999,
-                          minWidth: '220px',
-                          maxWidth: '280px',
-                          wordWrap: 'break-word',
-                          overflowWrap: 'break-word',
-                          whiteSpace: 'normal',
-                          pointerEvents: 'auto',
-                          fontSize: '11px',
-                          lineHeight: 1.5,
-                          color: '#d1d5db'
-                        }}
-                        onMouseEnter={() => setOpenTooltip('kg_var')}
-                        onMouseLeave={() => setOpenTooltip(null)}
-                      >
-                        <div style={{ fontWeight: 600, color: '#60a5fa', marginBottom: '6px', fontSize: '12px' }}>
-                          {filterTooltips.kg_var.title}
-                        </div>
-                        <div style={{ marginBottom: '8px' }}>
-                          {filterTooltips.kg_var.description}
-                        </div>
-                        <div style={{ padding: '6px', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '4px', fontSize: '10px', color: '#93c5fd' }}>
-                          {filterTooltips.kg_var.example}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <input
-                  className="search-input compact filter-input-short"
-                  placeholder=""
-                  value={oddsFilters.kg_var || ''}
-                  onChange={(e) => updateOddsFilter('kg_var', e.target.value)}
-                  style={{ width: '100%' }}
-                />
-                <div style={{ display: 'flex', gap: '2px', marginTop: '4px', width: '100%' }}>
-                  <select
-                    className="search-input compact"
-                    style={{ width: '50%', padding: '4px', fontSize: '10px' }}
-                    value={tolerancePlus['kg_var'] ?? 0}
-                    onChange={(e) => setTolerancePlus(prev => ({ ...prev, kg_var: Number(e.target.value) }))}
-                    title="Üst tolerans"
-                  >
-                    {[0, 1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n === 0 ? '+' : `+${n}`}</option>)}
-                  </select>
-                  <select
-                    className="search-input compact"
-                    style={{ width: '50%', padding: '4px', fontSize: '10px' }}
-                    value={toleranceMinus['kg_var'] ?? 0}
-                    onChange={(e) => setToleranceMinus(prev => ({ ...prev, kg_var: Number(e.target.value) }))}
-                    title="Alt tolerans"
-                  >
-                    {[0, 1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n === 0 ? '-' : `-${n}`}</option>)}
-                  </select>
-              </div>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-                <div className="filter-label" style={{ textAlign: 'center', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>
-                  KG Yok
-                  <div
-                    data-tooltip-container
-              style={{
-                      position: 'relative',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}
-                  >
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setOpenTooltip(openTooltip === 'kg_yok' ? null : 'kg_yok')
-                      }}
-                      onMouseEnter={() => setOpenTooltip('kg_yok')}
-                      onMouseLeave={() => setOpenTooltip(null)}
-                      style={{
-                        width: '18px',
-                        height: '18px',
-                        borderRadius: '50%',
-                        background: 'rgba(59, 130, 246, 0.2)',
-                        border: '1px solid rgba(59, 130, 246, 0.4)',
-                        color: '#60a5fa',
-                        fontSize: '12px',
-                        fontWeight: 'bold',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        padding: 0,
-                        transition: 'all 0.2s'
-                      }}
-                      onMouseOver={(e) => {
-                        e.currentTarget.style.background = 'rgba(59, 130, 246, 0.3)'
-                        e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.6)'
-                      }}
-                      onMouseOut={(e) => {
-                        e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)'
-                        e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.4)'
-                      }}
-                    >
-                      ?
-                    </button>
-                    {openTooltip === 'kg_yok' && (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          bottom: 'calc(100% + 8px)',
-                          left: '50%',
-                          transform: 'translateX(-50%)',
-                          padding: '8px 12px',
-                          background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.98) 100%)',
-                          border: '1px solid rgba(59, 130, 246, 0.4)',
-                          borderRadius: '8px',
-                          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
-                          zIndex: 9999,
-                          minWidth: '220px',
-                          maxWidth: '280px',
-                          wordWrap: 'break-word',
-                          overflowWrap: 'break-word',
-                          whiteSpace: 'normal',
-                          pointerEvents: 'auto',
-                          fontSize: '11px',
-                          lineHeight: 1.5,
-                          color: '#d1d5db'
-                        }}
-                        onMouseEnter={() => setOpenTooltip('kg_yok')}
-                        onMouseLeave={() => setOpenTooltip(null)}
-                      >
-                        <div style={{ fontWeight: 600, color: '#60a5fa', marginBottom: '6px', fontSize: '12px' }}>
-                          {filterTooltips.kg_yok.title}
-              </div>
-                        <div style={{ marginBottom: '8px' }}>
-                          {filterTooltips.kg_yok.description}
-              </div>
-                        <div style={{ padding: '6px', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '4px', fontSize: '10px', color: '#93c5fd' }}>
-                          {filterTooltips.kg_yok.example}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <input
-                  className="search-input compact filter-input-short"
-                  placeholder=""
-                  value={oddsFilters.kg_yok || ''}
-                  onChange={(e) => updateOddsFilter('kg_yok', e.target.value)}
-                  style={{ width: '100%' }}
-                />
-                <div style={{ display: 'flex', gap: '2px', marginTop: '4px', width: '100%' }}>
-                  <select
-                    className="search-input compact"
-                    style={{ width: '50%', padding: '4px', fontSize: '10px' }}
-                    value={tolerancePlus['kg_yok'] ?? 0}
-                    onChange={(e) => setTolerancePlus(prev => ({ ...prev, kg_yok: Number(e.target.value) }))}
-                    title="Üst tolerans"
-                  >
-                    {[0, 1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n === 0 ? '+' : `+${n}`}</option>)}
-                  </select>
-                  <select
-                    className="search-input compact"
-                    style={{ width: '50%', padding: '4px', fontSize: '10px' }}
-                    value={toleranceMinus['kg_yok'] ?? 0}
-                    onChange={(e) => setToleranceMinus(prev => ({ ...prev, kg_yok: Number(e.target.value) }))}
-                    title="Alt tolerans"
-                  >
-                    {[0, 1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n === 0 ? '-' : `-${n}`}</option>)}
-                  </select>
-              </div>
-              </div>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '1px',
+              padding: '3px 5px',
+              borderRadius: '5px',
+              backgroundColor: '#020617'
+            }}
+          >
+            <div style={{ fontWeight: 600, fontSize: '10px' }}>KG Yok</div>
+            <div style={{ fontSize: '8px', lineHeight: 1.1, color: '#9ca3af', textAlign: 'center' }}>
+              Karşılıklı gol yok
+            </div>
+            <input
+              className="search-input compact filter-input-short"
+              placeholder=""
+              value={oddsFilters.kg_yok || ''}
+              onChange={(e) => updateOddsFilter('kg_yok', e.target.value)}
+              style={{ padding: '3px', fontSize: '10px', width: '100%' }}
+            />
+            <div style={{ display: 'flex', gap: '2px', marginTop: '3px', width: '100%' }}>
+              <select
+                className="search-input compact"
+                style={{ width: '50%', padding: '3px', fontSize: '9px' }}
+                value={tolerancePlus['kg_yok'] ?? 0}
+                onChange={(e) => setTolerancePlus(prev => ({ ...prev, kg_yok: Number(e.target.value) }))}
+                title="Üst tolerans"
+              >
+                {[0, 1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n === 0 ? '+' : `+${n}`}</option>)}
+              </select>
+              <select
+                className="search-input compact"
+                style={{ width: '50%', padding: '3px', fontSize: '9px' }}
+                value={toleranceMinus['kg_yok'] ?? 0}
+                onChange={(e) => setToleranceMinus(prev => ({ ...prev, kg_yok: Number(e.target.value) }))}
+                title="Alt tolerans"
+              >
+                {[0, 1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n === 0 ? '-' : `-${n}`}</option>)}
+              </select>
             </div>
           </div>
         </div>
+      </div>
 
+      {/* Alt satır container - ÜST/ALT inputlar */}
+      <div className="search-section search-section-bottom filter-goals-row">
         <div
           style={{
-            marginTop: '16px',
-            padding: '10px 12px',
-            borderRadius: '8px',
-            backgroundColor: '#020617',
-            border: '1px solid #1f2937',
             fontSize: '11px',
             lineHeight: 1.4
           }}
@@ -2029,7 +1558,8 @@ export default function Home() {
               display: 'flex',
               flexWrap: 'nowrap',
               gap: '6px',
-              overflowX: 'auto'
+              overflowX: 'auto',
+              justifyContent: 'center'
             }}
           >
             {[
@@ -2053,8 +1583,7 @@ export default function Home() {
                   gap: '1px',
                   padding: '3px 5px',
                   borderRadius: '5px',
-                  backgroundColor: '#020617',
-                  minWidth: '80px'
+                  backgroundColor: '#020617'
                 }}
               >
                 <div style={{ fontWeight: 600, fontSize: '10px' }}>{item.bahis}</div>
@@ -2092,8 +1621,9 @@ export default function Home() {
             ))}
           </div>
         </div>
+      </div>
 
-        <div style={{ marginTop: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
+      <div style={{ marginTop: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
           <button className="btn-primary" onClick={runFilterSearch}>Filtrele</button>
           <button
             className="btn-secondary"
@@ -2122,7 +1652,7 @@ export default function Home() {
             value={
               hasSearched
                 ? `${formatInt(matches.length)} sonuç bulundu`
-                : `${formatInt(dbTotalCount ?? 45847)} toplam sonuç`
+                : `${formatInt(dbTotalCount ?? 45847)} toplam oynanmış maç`
             }
             readOnly
           />
@@ -3203,8 +2733,6 @@ export default function Home() {
         </div>
       )}
         </div>
-      </div>
-
       {/* Sağ Reklam - Desktop Only */}
       <div className="ad-right">
         <ins 

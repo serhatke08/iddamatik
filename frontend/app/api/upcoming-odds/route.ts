@@ -66,7 +66,8 @@ export async function GET(request: Request) {
       })
     
     console.log(`[upcoming-odds] Filtered matches: ${formattedMatches.length}`)
-      .map((match) => {
+    
+    const processedMatches = formattedMatches.map((match) => {
       // Lig ismini normalize et - iddaa-scrape'den gelen formatı koru
       let league = match.league || 'Bilinmeyen Lig'
 
@@ -173,7 +174,7 @@ export async function GET(request: Request) {
     }
     
     // Önce saate göre, sonra lig önceliğine göre sırala
-    const sortedMatches = formattedMatches.sort((a, b) => {
+    const sortedMatches = processedMatches.sort((a, b) => {
       const aTime = parseTime(a.time || '')
       const bTime = parseTime(b.time || '')
       

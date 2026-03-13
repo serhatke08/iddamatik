@@ -134,6 +134,152 @@ body {
   overflow: visible;
 }
 
+/* Her satır için ayrı container */
+.search-section-top {
+  margin-bottom: 0;
+}
+
+.search-section-middle {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.search-section-bottom {
+  margin-top: 0;
+}
+
+/* Desktop'ta üst satırı göster, orta satırda sadece MS1, MSX, MS2, KG Var, KG Yok */
+.filter-row-top {
+  display: none;
+}
+
+/* Desktop'ta gösterilecek inputlar (mobilde gizlenecek) */
+.filter-desktop-only {
+  display: block;
+}
+
+@media (min-width: 769px) {
+  .filter-row-top {
+    display: flex !important;
+    justify-content: center;
+  }
+
+  .filter-row-bottom {
+    justify-content: center;
+  }
+
+  .filter-goals-row > div {
+    display: flex;
+    justify-content: center;
+  }
+
+  /* Her satırdaki inputları eşit genişlikte yap - inline style'ları override et */
+  .filter-row-top > div:not(:first-child),
+  .filter-row-top > div:not(:first-child)[style],
+  .filter-row-bottom > div,
+  .filter-row-bottom > div[style] {
+    flex: 1 !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    width: auto !important;
+  }
+
+  /* ÜST/ALT inputlar için - direkt child selector */
+  .filter-goals-row > div > div > div {
+    flex: 1 !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    width: auto !important;
+  }
+
+  /* Lig select için özel genişlik (çok uzun olmasın) */
+  .filter-row-top > div:first-child,
+  .filter-row-top > div:first-child[style] {
+    flex: 0 0 auto !important;
+    min-width: 200px !important;
+    max-width: 250px !important;
+  }
+
+  /* Input kutucuklarını büyüt */
+  .filter-input-short {
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+    padding: 8px !important;
+    font-size: 12px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .search-section-top {
+    margin-bottom: 16px;
+  }
+
+  .search-section-middle {
+    margin-top: 0;
+    margin-bottom: 16px;
+  }
+
+  .search-section-bottom {
+    margin-top: 0;
+  }
+
+  .filter-row-top {
+    display: flex !important;
+  }
+
+  .filter-row-bottom {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+
+  /* Mobilde desktop-only inputları gizle */
+  .filter-desktop-only {
+    display: none !important;
+  }
+
+  /* ÜST/ALT inputlar satırı için mobilde ekstra boşluk */
+  .filter-goals-row {
+    margin-top: 0 !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .filter-row {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    gap: 6px !important;
+    column-gap: 6px !important;
+    row-gap: 4px !important;
+    padding-bottom: 4px;
+    align-items: flex-end;
+  }
+  
+  .filter-cell {
+    flex-shrink: 0 !important;
+    min-width: auto !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: auto !important;
+  }
+
+  /* Inline style'ları override et */
+  .filter-row[style] {
+    column-gap: 6px !important;
+  }
+
+  .filter-cell[style*="marginLeft"],
+  .filter-cell[style*="margin-left"] {
+    margin-left: 0 !important;
+  }
+
+  .filter-cell[style*="marginRight"],
+  .filter-cell[style*="margin-right"] {
+    margin-right: 0 !important;
+  }
+}
+
 .filter-cell {
   display: flex;
   flex-direction: column;
@@ -141,6 +287,27 @@ body {
   align-items: center;
   white-space: nowrap;
 }
+
+  /* Mobilde negatif margin'leri kaldır */
+  @media (max-width: 768px) {
+    .filter-cell[style*="-2px"],
+    .filter-cell[style*="-2 px"] {
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+    }
+
+    /* Lig inputunu mobilde gizle - ilk filter-cell ve minWidth: 200px olan */
+    .filter-cell[style*="minWidth: '200px'"],
+    .filter-cell[style*="minWidth: \"200px\""],
+    .filter-cell[style*="min-width: 200px"] {
+      display: none !important;
+    }
+
+    /* Boş div'leri de gizle */
+    .filter-row > div:empty {
+      display: none !important;
+    }
+  }
 
 .filter-label {
   font-size: 0.85rem;
@@ -152,9 +319,9 @@ body {
 }
 
 .filter-input-short {
-  width: 10ch;
-  min-width: 10ch;
-  max-width: 10ch;
+  width: 100%;
+  min-width: 100%;
+  max-width: 100%;
   text-align: center;
 }
 
@@ -188,6 +355,15 @@ body {
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+}
+
+/* Mobilde tablo için min-width'i kaldır */
+@media (max-width: 768px) {
+  .matches-table {
+    min-width: auto;
+    width: 100%;
+    display: table;
+  }
 }
 
 .matches-table th,
@@ -612,13 +788,50 @@ body {
   }
 
   .filter-row {
-    grid-template-columns: 1fr !important;
-    gap: 8px;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    gap: 6px !important;
+    column-gap: 6px !important;
+    row-gap: 4px !important;
     font-size: 10px;
+    padding-bottom: 4px;
+    align-items: flex-end;
   }
 
   .filter-cell {
-    width: 100%;
+    flex-shrink: 0 !important;
+    width: auto !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    min-width: auto !important;
+  }
+
+  /* Lig inputunu mobilde gizle */
+  .filter-cell[style*="minWidth: '200px'"],
+  .filter-cell[style*="minWidth: \"200px\""],
+  .filter-cell[style*="min-width: 200px"] {
+    display: none !important;
+  }
+
+  /* Boş div'leri de gizle */
+  .filter-row > div:empty {
+    display: none !important;
+  }
+
+  /* Inline style'ları override et */
+  .filter-row[style] {
+    column-gap: 6px !important;
+  }
+
+  .filter-cell[style*="marginLeft"],
+  .filter-cell[style*="margin-left"] {
+    margin-left: 0 !important;
+  }
+
+  .filter-cell[style*="marginRight"],
+  .filter-cell[style*="margin-right"] {
+    margin-right: 0 !important;
   }
 
   .filter-label {
@@ -628,26 +841,57 @@ body {
 
   .search-input,
   .filter-input-short {
-    font-size: 12px !important;
-    padding: 6px 8px !important;
+    font-size: 11px !important;
+    padding: 6px 6px !important;
+  }
+
+  .filter-input-short {
+    width: 8ch !important;
+    min-width: 8ch !important;
+    max-width: 8ch !important;
   }
 
   .matches-table {
-    font-size: 9px;
+    font-size: 10px;
     overflow-x: auto;
-    display: block;
+    display: table;
+    width: 100%;
+    min-width: 100%;
+  }
+
+  .matches-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-right: 10px;
+    margin-right: -10px;
   }
 
   .matches-table th,
   .matches-table td {
-    padding: 4px 3px;
+    padding: 6px 4px;
     white-space: nowrap;
     font-size: 9px;
+    min-width: 50px;
   }
 
   .matches-table th {
     font-size: 9px;
-    padding: 6px 3px;
+    padding: 8px 4px;
+    position: sticky;
+    left: 0;
+    background: #111827;
+    z-index: 10;
+  }
+
+  .matches-table td:first-child {
+    position: sticky;
+    left: 0;
+    background: #0f172a;
+    z-index: 5;
+  }
+
+  .matches-table tr:nth-child(even) td:first-child {
+    background: #0b1220;
   }
 
   .btn-primary,
@@ -750,8 +994,50 @@ body {
   }
 
   .filter-row {
-    gap: 6px;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    gap: 5px !important;
+    column-gap: 5px !important;
+    row-gap: 3px !important;
     font-size: 9px;
+    padding-bottom: 4px;
+    align-items: flex-end;
+  }
+
+  .filter-cell {
+    flex-shrink: 0 !important;
+    width: auto !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    min-width: auto !important;
+  }
+
+  /* Lig inputunu mobilde gizle */
+  .filter-cell[style*="minWidth: '200px'"],
+  .filter-cell[style*="minWidth: \"200px\""],
+  .filter-cell[style*="min-width: 200px"] {
+    display: none !important;
+  }
+
+  /* Boş div'leri de gizle */
+  .filter-row > div:empty {
+    display: none !important;
+  }
+
+  /* Inline style'ları override et */
+  .filter-row[style] {
+    column-gap: 5px !important;
+  }
+
+  .filter-cell[style*="marginLeft"],
+  .filter-cell[style*="margin-left"] {
+    margin-left: 0 !important;
+  }
+
+  .filter-cell[style*="marginRight"],
+  .filter-cell[style*="margin-right"] {
+    margin-right: 0 !important;
   }
 
   .filter-label {
@@ -760,23 +1046,54 @@ body {
 
   .search-input,
   .filter-input-short {
-    font-size: 11px !important;
-    padding: 5px 6px !important;
+    font-size: 10px !important;
+    padding: 5px 5px !important;
+  }
+
+  .filter-input-short {
+    width: 7ch !important;
+    min-width: 7ch !important;
+    max-width: 7ch !important;
   }
 
   .matches-table {
     font-size: 8px;
+    width: 100%;
+    min-width: 100%;
+  }
+
+  .matches-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-right: 8px;
+    margin-right: -8px;
   }
 
   .matches-table th,
   .matches-table td {
-    padding: 3px 2px;
+    padding: 5px 3px;
     font-size: 8px;
+    min-width: 45px;
   }
 
   .matches-table th {
     font-size: 8px;
-    padding: 5px 2px;
+    padding: 6px 3px;
+    position: sticky;
+    left: 0;
+    background: #111827;
+    z-index: 10;
+  }
+
+  .matches-table td:first-child {
+    position: sticky;
+    left: 0;
+    background: #0f172a;
+    z-index: 5;
+  }
+
+  .matches-table tr:nth-child(even) td:first-child {
+    background: #0b1220;
   }
 
   .btn-primary,

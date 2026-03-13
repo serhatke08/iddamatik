@@ -53,6 +53,9 @@ interface DeepAnalysis {
   kgYok: number
   iyKgVar: number
   iyKgYok: number
+  ms1Count?: number
+  msxCount?: number
+  ms2Count?: number
 }
 
 interface AnalysisResponse {
@@ -64,6 +67,7 @@ interface AnalysisResponse {
     isKgRisky: boolean
     isFavored: boolean
     recommendation: string
+    detailedComments?: string[]
   }
   odds: {
     ms1: number

@@ -195,15 +195,17 @@ async function fetchFromIddaaFallback(): Promise<UpcomingMatch[]> {
         date: m.date,
         time: m.time,
         status: m.status || 'UPCOMING',
-        odds: {
-          H: m.odds.ms1 || null,
-          D: m.odds.msx || null,
-          A: m.odds.ms2 || null,
-          BTTSY: m.odds.kg_var || null,
-          BTTSN: m.odds.kg_yok || null,
-          O25: m.odds.o25 || null,
-          U25: m.odds.u25 || null
-        }
+        odds: Object.fromEntries(
+          Object.entries({
+            H: m.odds.ms1,
+            D: m.odds.msx,
+            A: m.odds.ms2,
+            BTTSY: m.odds.kg_var,
+            BTTSN: m.odds.kg_yok,
+            O25: m.odds.o25,
+            U25: m.odds.u25
+          }).filter(([_, value]) => value != null)
+        ) as Record<string, number>
       }))
   } catch (error) {
     console.error('Error fetching from iddaa fallback:', error)

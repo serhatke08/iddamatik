@@ -50,8 +50,11 @@ export default function NasilCalisirPage() {
               sonra arama tetiklenir. İsterseniz <strong>Filtrele</strong> ile de anında çalıştırabilirsiniz.
             </li>
             <li>
-              <strong>Çoklu filtre = VE (AND):</strong> Örneğin lig + MS1 + Skor birlikte seçildiyse, sonuçta{' '}
-              <em>hepsi birden</em> sağlanan maçlar listelenir.
+              <strong>Çoklu filtre = genelde VE (AND):</strong> Örneğin lig + Skor + Üst 2.5 birlikte seçildiyse, sonuçta{' '}
+              <em>hepsi birden</em> sağlanan maçlar listelenir. <strong>İstisna:</strong> MS1, MSX ve MS2 kutularından{' '}
+              birden fazlası doluysa bu üçü <strong>VEYA (OR)</strong> ile birleşir — örneğin yazdığınız MS1 oranına
+              uyan maçlar ile MS2 oranına uyan maçlar <strong>tek listede toplanır</strong> (aynı maç iki kez
+              gösterilmez).
             </li>
             <li>
               Arka planda istek <code style={{ color: '#93c5fd' }}>/api/csv-filter</code> üzerinden yapılır; sonuçlar

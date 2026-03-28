@@ -1,69 +1,29 @@
 import { NextResponse } from 'next/server'
-import { iddaaService } from '@/lib/iddaa-data'
-import { parse, format, isAfter, isToday, isBefore, startOfDay } from 'date-fns'
+import { format } from 'date-fns'
+import { isMatchUpcomingIddaa, parseIddaaKickoffMs } from '@/lib/match-datetime'
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
     // Cache'i tamamen bypass et ve her zaman API'den yeni veri çek
     // Direkt fetchIddaaProgram'ı kullan (cache yok)
     const { fetchIddaaProgram } = await import('@/lib/iddaa-scrape')
     const freshMatches = await fetchIddaaProgram(2000) // Her zaman yeni veri çek
     const upcomingMatches = freshMatches.filter((match) => match.status !== 'FINISHED')
-    
-    // Şu anki tarih ve saat
+
     const now = new Date()
-    const nowTime = now.getHours() * 60 + now.getMinutes() // Dakika cinsinden
-    
-    // Formatla - geçmiş maçları ve FINISHED olanları filtrele
-    const todayStr = format(now, 'dd/MM/yyyy')
-    console.log(`[upcoming-odds] Today: ${todayStr}, Now time: ${nowTime} minutes`)
-    console.log(`[upcoming-odds] Total matches from API: ${upcomingMatches.length}`)
-    
-    const formattedMatches = upcomingMatches
-      .filter((match) => {
-        // Status kontrolü
-        if (match.status === 'FINISHED') {
-          return false
-        }
-        
-        // Tarih kontrolü - sadece bugün ve gelecek tarihlerdeki maçları göster
-        try {
-          if (!match.date) {
-            return true // Tarih yoksa göster
-          }
-          
-          const matchDate = parse(match.date, 'dd/MM/yyyy', new Date())
-          const today = startOfDay(now)
-          const matchDay = startOfDay(matchDate)
-          
-          // Geçmiş günlerdeki maçları filtrele (bugünden önceki günler)
-          if (isBefore(matchDay, today)) {
-            return false
-          }
-          
-          // Bugünkü maçlar için saat kontrolü
-          if (matchDay.getTime() === today.getTime() && match.time) {
-            const timeParts = match.time.split(':')
-            if (timeParts.length >= 2) {
-              const matchHours = parseInt(timeParts[0]) || 0
-              const matchMinutes = parseInt(timeParts[1]) || 0
-              const matchTime = matchHours * 60 + matchMinutes
-              
-              // Bugünkü maçlar için sadece geçmiş saatlerdeki maçları filtrele (30 dakika tolerans)
-              if (matchTime < nowTime - 30) {
-                return false
-              }
-            }
-          }
-          
-          // Bugün (saat kontrolünden geçen) veya gelecek günlerdeki maçlar: göster
-          return true
-        } catch (error) {
-          // Parse hatası olursa, maçı göster (güvenli tarafta kal)
-          console.error('[upcoming-odds] Date parse error:', error, match.date)
-          return true
-        }
-      })
+    console.log(
+      `[upcoming-odds] Now (UTC): ${now.toISOString()} | Total raw: ${upcomingMatches.length}`
+    )
+
+    // Başlama: önce API Unix saniyesi (kickoff_ts), yoksa TR string
+    const formattedMatches = upcomingMatches.filter((match) => {
+      if (match.status === 'FINISHED') return false
+      if (typeof match.kickoff_ts === 'number' && match.kickoff_ts > 0) {
+        return match.kickoff_ts * 1000 > Date.now()
+      }
+      if (!match.date) return true
+      return isMatchUpcomingIddaa(match.date, match.time)
+    })
     
     console.log(`[upcoming-odds] Filtered matches: ${formattedMatches.length}`)
     
@@ -126,6 +86,9 @@ export async function GET(request: Request) {
         if (match.odds.u45) odds['U45'] = parseFloat(match.odds.u45.toString())
       }
 
+      const kickoffMs =
+        typeof match.kickoff_ts === 'number' && match.kickoff_ts > 0 ? match.kickoff_ts * 1000 : undefined
+
       return {
         match_id: match.match_id?.toString() || `${Date.now()}-${Math.random()}`,
         home_team: match.home_team || 'Takım 1',
@@ -133,69 +96,26 @@ export async function GET(request: Request) {
         league: league,
         // Tipte country yok ama bazı kaynaklar gönderiyor olabilir; o yüzden esnek tutuyoruz
         country: (match as any).country || '',
-        date: match.date || new Date().toISOString().split('T')[0],
+        date: match.date || format(new Date(), 'dd/MM/yyyy'),
         time: match.time || '',
         status: match.status || 'NS',
         odds,
-        fixture_id: match.match_id
+        fixture_id: match.match_id,
+        kickoff_ms: kickoffMs
       }
     })
 
-    // Saat parse fonksiyonu
-    const parseTime = (timeStr: string): number => {
-      if (!timeStr) return 9999 // Saat yoksa en sona
-      const parts = timeStr.split(':')
-      if (parts.length >= 2) {
-        const hours = parseInt(parts[0]) || 0
-        const minutes = parseInt(parts[1]) || 0
-        return hours * 60 + minutes // Dakika cinsinden
-      }
-      return 9999
-    }
-
-    // Lig önceliği
-    const leaguePriority: Record<string, number> = {
-      'Super Lig': 1,
-      'Süper Lig': 1,
-      'Premier League': 2,
-      'LaLiga': 3,
-      'Serie A': 4,
-      'Bundesliga': 5,
-      'Ligue 1': 6,
-      'Champions League': 7,
-      'Europa League': 8,
-      'Eredivisie': 9,
-      'Liga Portugal': 10,
-      'Scottish Premiership': 11,
-      'MLS': 12,
-      'A-League': 13,
-      'Brazil Serie A': 14,
-      'Russia Premier League': 15
-    }
-    
-    // Önce saate göre, sonra lig önceliğine göre sırala
+    // Oynanma zamanına göre (önce Unix ms, yoksa TR tarih parse)
     const sortedMatches = processedMatches.sort((a, b) => {
-      const aTime = parseTime(a.time || '')
-      const bTime = parseTime(b.time || '')
-      
-      // Önce saate göre sırala
-      if (aTime !== bTime) {
-        return aTime - bTime
-      }
-      
-      // Aynı saatteyse lig önceliğine göre
-      const aPriority = leaguePriority[a.league] || 999
-      const bPriority = leaguePriority[b.league] || 999
-      
-      if (aPriority !== bPriority) {
-        return aPriority - bPriority
-      }
-      
-      // Aynı lig ve saatteyse lig ismine göre
+      const ak = typeof a.kickoff_ms === 'number' ? a.kickoff_ms : parseIddaaKickoffMs(a.date, a.time)
+      const bk = typeof b.kickoff_ms === 'number' ? b.kickoff_ms : parseIddaaKickoffMs(b.date, b.time)
+      if (ak !== null && bk !== null) return ak - bk
+      if (ak !== null) return -1
+      if (bk !== null) return 1
       return a.league.localeCompare(b.league)
     })
 
-    return NextResponse.json({ matches: sortedMatches })
+    return NextResponse.json({ matches: sortedMatches, source: 'iddaa' })
   } catch (error: any) {
     console.error('API Error:', error)
     return NextResponse.json(

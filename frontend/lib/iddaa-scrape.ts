@@ -5,6 +5,8 @@ export type IddaaMatch = {
   match_id: string
   date: string
   time: string
+  /** API event.d — Unix saniye (kickoff anı). Sunucu TZ ile format() yapılmamalı; filtre için kaynak. */
+  kickoff_ts?: number
   league: string
   home_team: string
   away_team: string
@@ -77,6 +79,29 @@ const buildOdds = (raw: RawMatch): Record<string, number> => {
   if (ust !== null) odds.o25 = ust
 
   return odds
+}
+
+/** İddaa zaman damgasını Europe/Istanbul takvim/saatine çevir (Vercel UTC format() hatasını önler). */
+function formatKickoffIstanbul(epochSeconds: number): { date: string; time: string } {
+  const d = new Date(epochSeconds * 1000)
+  const dateFmt = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/Istanbul',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })
+  const timeFmt = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/Istanbul',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  })
+  const dp = Object.fromEntries(dateFmt.formatToParts(d).map((p) => [p.type, p.value])) as Record<string, string>
+  const tp = Object.fromEntries(timeFmt.formatToParts(d).map((p) => [p.type, p.value])) as Record<string, string>
+  const date = `${dp.day}/${dp.month}/${dp.year}`
+  const hour = (tp.hour || '00').padStart(2, '0')
+  const minute = (tp.minute || '00').padStart(2, '0')
+  return { date, time: `${hour}:${minute}` }
 }
 
 const fetchJson = async <T>(url: string, timeoutMs = 15000): Promise<T> => {
@@ -156,9 +181,9 @@ export const fetchIddaaProgram = async (limit = 2000): Promise<IddaaMatch[]> => 
   const events = eventsResp?.data?.events ?? []
   const sliceLimit = limit && limit > 0 ? limit : events.length
   const parsed: IddaaMatch[] = events.slice(0, sliceLimit).map((event: any) => {
-    const dateObj = new Date((event.d || 0) * 1000)
-    const date = event.d ? format(dateObj, 'dd/MM/yyyy') : today
-    const time = event.d ? format(dateObj, 'HH:mm') : ''
+    const epochSec = typeof event.d === 'number' ? event.d : 0
+    const { date, time } =
+      epochSec > 0 ? formatKickoffIstanbul(epochSec) : { date: today, time: '' }
     const leagueRaw = competitions.get(Number(event.ci)) || 'Unknown'
     const league = normalizeLeagueName(leagueRaw)
     const home = event.hn || ''
@@ -169,6 +194,7 @@ export const fetchIddaaProgram = async (limit = 2000): Promise<IddaaMatch[]> => 
       match_id: toId(seed),
       date,
       time,
+      kickoff_ts: epochSec > 0 ? epochSec : undefined,
       league,
       home_team: home,
       away_team: away,

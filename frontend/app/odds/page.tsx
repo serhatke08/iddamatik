@@ -204,7 +204,6 @@ export default function OddsInfoPage() {
             <a href="/" className={pathname === '/' ? 'active' : ''}>Ana Sayfa</a>
             <a href="/odds" className={pathname === '/odds' ? 'active' : ''}>Oranlar</a>
             <a href="/analysis-robot" className={pathname === '/analysis-robot' ? 'active' : ''}>Analiz Robotu</a>
-            <a href="/stats" className={pathname === '/stats' ? 'active' : ''}>İstatistik</a>
           </nav>
         </div>
       </nav>

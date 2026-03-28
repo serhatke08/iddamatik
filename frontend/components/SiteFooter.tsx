@@ -1,7 +1,5 @@
 import Link from 'next/link'
 
-const siteUrl = 'https://iddamatik.vercel.app'
-
 const rehberLinks = [
   { href: '/rehber/iddaa-analiz', label: 'İddaa analiz' },
   { href: '/rehber/iddaa-oran-analiz', label: 'Oran analizi' },
@@ -68,11 +66,7 @@ export function SiteFooter() {
       </div>
 
       <div className="site-footer-bottom">
-        <p className="site-footer-copy">© {new Date().getFullYear()} İddaamatik</p>
-        <span className="site-footer-dot" aria-hidden />
-        <a href={`${siteUrl}/sitemap.xml`} className="site-footer-meta-link">
-          Site haritası
-        </a>
+        <p className="site-footer-copy">© {new Date().getFullYear()} iddaanaliz.com</p>
         <span className="site-footer-dot" aria-hidden />
         <a href="/" className="site-footer-meta-link">
           Ana sayfa

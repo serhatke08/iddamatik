@@ -107,6 +107,32 @@ const toFixed2 = (value: number | undefined | null): number | null => {
   return Number(Number(value).toFixed(2))
 }
 
+/** Maç sonucu oranları: birden fazlası seçildiğinde birleşim (OR); diğer bahis oranlarıyla yine VE (AND). */
+const MS_ODDS_KEYS = new Set(['ms1', 'msx', 'ms2'])
+
+function matchesOddsFilterKey(
+  odds: Record<string, number>,
+  key: string,
+  value: number,
+  params: FilterParams
+): boolean {
+  if (!(key in odds)) return false
+  const target = Number(value)
+  const actual = Number(odds[key] ?? 0)
+  const plusTol = params.tolerance_plus?.[key] ?? 0
+  const minusTol = params.tolerance_minus?.[key] ?? 0
+
+  if (plusTol === 0 && minusTol === 0) {
+    const targetFixed = Number(target.toFixed(2))
+    const actualFixed = Number(actual.toFixed(2))
+    return actualFixed === targetFixed
+  }
+  const min = Number((target - minusTol * 0.1).toFixed(1))
+  const max = Number((target + plusTol * 0.1).toFixed(1))
+  const actualRounded = Number(actual.toFixed(1))
+  return actualRounded >= min && actualRounded <= max
+}
+
 const listCsvFiles = (dir: string): string[] => {
   if (!fs.existsSync(dir)) return []
   return fs
@@ -486,39 +512,30 @@ export const csvService = {
 
       if (odds_filters) {
         const odds = m.odds || {}
-        let ok = true
-        for (const [key, value] of Object.entries(odds_filters)) {
-          if (!(key in odds)) {
-            ok = false
+        const entries = Object.entries(odds_filters)
+        const msEntries = entries.filter(([k]) => MS_ODDS_KEYS.has(k))
+        const otherEntries = entries.filter(([k]) => !MS_ODDS_KEYS.has(k))
+
+        let msOk = true
+        if (msEntries.length >= 2) {
+          msOk = msEntries.some(([key, value]) =>
+            matchesOddsFilterKey(odds, key, Number(value), params)
+          )
+        } else if (msEntries.length === 1) {
+          const [key, value] = msEntries[0]
+          msOk = matchesOddsFilterKey(odds, key, Number(value), params)
+        }
+
+        if (!msOk) continue
+
+        let otherOk = true
+        for (const [key, value] of otherEntries) {
+          if (!matchesOddsFilterKey(odds, key, Number(value), params)) {
+            otherOk = false
             break
           }
-          const target = Number(value)
-          const actual = Number(odds[key] ?? 0)
-          
-          // Tolerans kontrolü
-          const plusTol = params.tolerance_plus?.[key] ?? 0
-          const minusTol = params.tolerance_minus?.[key] ?? 0
-          
-          if (plusTol === 0 && minusTol === 0) {
-            // Tolerans yoksa tam eşleşme
-            const targetFixed = Number(target.toFixed(2))
-            const actualFixed = Number(actual.toFixed(2))
-            if (actualFixed !== targetFixed) {
-              ok = false
-              break
-            }
-          } else {
-            // Tolerans varsa aralık kontrolü (örn: 2.5 +2 = 2.5, 2.6, 2.7)
-            const min = Number((target - minusTol * 0.1).toFixed(1))
-            const max = Number((target + plusTol * 0.1).toFixed(1))
-            const actualRounded = Number(actual.toFixed(1))
-            if (actualRounded < min || actualRounded > max) {
-              ok = false
-              break
-            }
-          }
         }
-        if (!ok) continue
+        if (!otherOk) continue
       }
 
       if (kg) {

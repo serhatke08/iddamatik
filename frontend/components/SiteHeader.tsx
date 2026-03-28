@@ -7,7 +7,6 @@ const links = [
   { href: '/', label: 'Ana Sayfa' },
   { href: '/odds', label: 'Oranlar' },
   { href: '/analysis-robot', label: 'Analiz Robotu' },
-  { href: '/stats', label: 'İstatistik' },
 ] as const
 
 export function SiteHeader() {

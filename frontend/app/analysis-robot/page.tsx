@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 import Link from 'next/link'
+import { isMatchUpcomingFromApi } from '@/lib/match-datetime'
 
 interface UpcomingMatch {
   match_id: string
@@ -15,6 +16,8 @@ interface UpcomingMatch {
   status: string
   odds: Record<string, number>
   fixture_id: number
+  /** İddaa API kickoff (Unix ms); varsa filtre/sıralama için kaynak doğruluk */
+  kickoff_ms?: number
 }
 
 interface GeneralAnalysisItem {
@@ -102,78 +105,46 @@ export default function AnalysisRobotPage() {
   const [couponPredictions, setCouponPredictions] = useState<CouponPrediction[]>([])
   const [couponGroups, setCouponGroups] = useState<CouponGroup[]>([])
   const [analyzingCoupon, setAnalyzingCoupon] = useState(false)
+  const [matchesError, setMatchesError] = useState<string | null>(null)
 
-  useEffect(() => {
-    fetchMatches()
-  }, [])
-
-  const parseTime = (timeStr: string): number => {
-    if (!timeStr) return 9999 // Saat yoksa en sona
-    const parts = timeStr.split(':')
-    if (parts.length >= 2) {
-      const hours = parseInt(parts[0]) || 0
-      const minutes = parseInt(parts[1]) || 0
-      return hours * 60 + minutes // Dakika cinsinden
-    }
-    return 9999
-  }
-
-  const fetchMatches = async () => {
+  const fetchMatches = useCallback(async () => {
     setLoading(true)
+    setMatchesError(null)
     try {
-      // Yeni API endpoint'i kullan
-      const response = await axios.get('/api/upcoming-matches?days=14')
-      const allMatches = response.data.matches || []
-      
-      // Lig önceliği
-      const leaguePriority: Record<string, number> = {
-        'Super Lig': 1,
-        'Süper Lig': 1,
-        'Premier League': 2,
-        'LaLiga': 3,
-        'Serie A': 4,
-        'Bundesliga': 5,
-        'Ligue 1': 6,
-        'Champions League': 7,
-        'Europa League': 8,
-        'Eredivisie': 9,
-        'Liga Portugal': 10,
-        'Scottish Premiership': 11,
-        'MLS': 12,
-        'A-League': 13,
-        'Brazil Serie A': 14,
-        'Russia Premier League': 15
-      }
-      
-      // Önce saate göre, sonra lig önceliğine göre sırala
-      const sortedMatches = allMatches.sort((a: UpcomingMatch, b: UpcomingMatch) => {
-        const aTime = parseTime(a.time || '')
-        const bTime = parseTime(b.time || '')
-        
-        // Önce saate göre sırala
-        if (aTime !== bTime) {
-          return aTime - bTime
-        }
-        
-        // Aynı saatteyse lig önceliğine göre
-        const aPriority = leaguePriority[a.league] || 999
-        const bPriority = leaguePriority[b.league] || 999
-        
-        if (aPriority !== bPriority) {
-          return aPriority - bPriority
-        }
-        
-        // Aynı lig ve saatteyse lig ismine göre
-        return a.league.localeCompare(b.league)
-      })
-      
-      setMatches(sortedMatches)
+      const response = await axios.get('/api/upcoming-odds')
+      const allMatches: UpcomingMatch[] = response.data.matches || []
+      const upcoming = allMatches.filter((m) =>
+        isMatchUpcomingFromApi(m.kickoff_ms, m.date, m.time)
+      )
+      setMatches(upcoming)
     } catch (error) {
       console.error('Error fetching matches:', error)
+      const msg =
+        axios.isAxiosError(error) && error.response?.data?.error
+          ? String(error.response.data.error)
+          : 'Maç listesi alınamadı. Ağ veya İddaa API erişimini kontrol edin.'
+      setMatchesError(msg)
+      setMatches([])
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    fetchMatches()
+  }, [fetchMatches])
+
+  // Sayfa açıkken başlama saati gelen maçları listeden düşür (İddaa TRT)
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setMatches((prev) =>
+        prev.filter((m) => isMatchUpcomingFromApi(m.kickoff_ms, m.date, m.time))
+      )
+    }, 15000)
+    return () => window.clearInterval(id)
+  }, [])
+
+  const COUPON_MAX_MATCHES = 200
 
   const analyzeCoupon = async () => {
     if (matches.length === 0) {
@@ -187,176 +158,156 @@ export default function AnalysisRobotPage() {
     const predictions: CouponPrediction[] = []
     let analyzedCount = 0
     let errorCount = 0
-    let cancelled = false
-    
-    // Genel timeout - 5 dakika sonra iptal et
-    const globalTimeout = setTimeout(() => {
-      console.warn('[analyzeCoupon] Global timeout reached, cancelling...')
-      cancelled = true
-      setAnalyzingCoupon(false)
-      alert('Analiz çok uzun sürdü. Lütfen daha az maç ile tekrar deneyin.')
-    }, 300000) // 5 dakika
     
     try {
-      console.log(`Starting coupon analysis for ${matches.length} matches...`)
-      
-      // Tüm maçları sırayla analiz et
-      for (let i = 0; i < matches.length; i++) {
-        // İptal kontrolü
-        if (cancelled) {
-          console.log('[analyzeCoupon] Cancelled, breaking loop')
-          break
-        }
-        
-        const match = matches[i]
-        
-        try {
-          // Odds'u temizle
-          const cleanOdds: Record<string, number> = {}
-          Object.entries(match.odds || {}).forEach(([key, value]) => {
-            if (value !== null && value !== undefined && !isNaN(Number(value))) {
-              cleanOdds[key] = Number(value)
-            }
-          })
-          
-          if (Object.keys(cleanOdds).length === 0) {
-            console.log(`Skipping match ${match.match_id}: No valid odds`)
-            continue
+      const prepared: { match: UpcomingMatch; cleanOdds: Record<string, number> }[] = []
+      for (const match of matches) {
+        if (prepared.length >= COUPON_MAX_MATCHES) break
+        const cleanOdds: Record<string, number> = {}
+        Object.entries(match.odds || {}).forEach(([key, value]) => {
+          if (value !== null && value !== undefined && !isNaN(Number(value))) {
+            cleanOdds[key] = Number(value)
           }
-          
-          // MS1, MSX, MS2 kontrolü
-          if (!cleanOdds.H || !cleanOdds.D || !cleanOdds.A) {
-            console.log(`Skipping match ${match.match_id}: Missing MS1/MSX/MS2 odds`)
-            continue
-          }
-          
-          // Analiz yap (10 saniye timeout)
-          const response = await axios.post('/api/analyze-odds', {
-            odds: cleanOdds
-          }, {
-            timeout: 10000 // 10 saniye timeout
-          })
-          
-          if (response.data && response.data.generalAnalysis && response.data.generalAnalysis.pool) {
-            const pool = response.data.generalAnalysis.pool
-            
-            // Tüm bahis tiplerini kontrol et (MS1, MSX, MS2, KG VAR, KG YOK, İY KG VAR, İY KG YOK)
-            // Sadece odds'u olan bahis tiplerini kontrol et
-            // İY KG VAR/YOK'u çıkar çünkü bunların odds'u yok
-            const rates = [
-              { type: 'MS1', label: 'MS1', rate: pool.ms1Rate || 0 },
-              { type: 'MSX', label: 'MSX', rate: pool.msxRate || 0 },
-              { type: 'MS2', label: 'MS2', rate: pool.ms2Rate || 0 },
-              { type: 'KG_VAR', label: 'KG VAR', rate: pool.kgVar || 0 },
-              { type: 'KG_YOK', label: 'KG YOK', rate: pool.kgYok || 0 }
-            ]
-            
-            // Tüm bahis tiplerini kontrol et (%50+ olanlar)
-            const validBets = rates.filter(bet => bet.rate >= 50)
-            
-            if (validBets.length > 0) {
-              // Oranları yüksekten düşüğe sırala
-              validBets.sort((a, b) => b.rate - a.rate)
-              
-              // En yüksek oranı al, ama MS1'e öncelik verme
-              // Eğer birden fazla yüksek oran varsa, en yüksek olanı seç
-              const bestBet = validBets[0]
-              
-              // Eğer en yüksek oran çok yakınsa (0.5% fark içinde), daha yüksek odd'a sahip olanı tercih et
-              if (validBets.length > 1 && validBets[0].rate - validBets[1].rate < 0.5) {
-                // İki bahis tipinin de oranlarını kontrol et
-                const bet1Odd = bestBet.type === 'MS1' ? (match.odds.H || 0) :
-                               bestBet.type === 'MSX' ? (match.odds.D || 0) :
-                               bestBet.type === 'MS2' ? (match.odds.A || 0) :
-                               bestBet.type === 'KG_VAR' ? (match.odds.BTTSY || 0) :
-                               (match.odds.BTTSN || 0)
-                
-                const bet2Odd = validBets[1].type === 'MS1' ? (match.odds.H || 0) :
-                               validBets[1].type === 'MSX' ? (match.odds.D || 0) :
-                               validBets[1].type === 'MS2' ? (match.odds.A || 0) :
-                               validBets[1].type === 'KG_VAR' ? (match.odds.BTTSY || 0) :
-                               (match.odds.BTTSN || 0)
-                
-                // Daha yüksek odd'a sahip olanı seç (daha iyi kazanç)
-                if (bet2Odd > bet1Odd && bet2Odd > 0) {
-                  const temp = validBets[0]
-                  validBets[0] = validBets[1]
-                  validBets[1] = temp
-                }
-              }
-              
-              const finalBestBet = validBets[0]
-              
-              // Oran değerini al (match.odds'dan)
-              let odd: number | null = null
-              if (finalBestBet.type === 'MS1') {
-                odd = match.odds.H || null
-              } else if (finalBestBet.type === 'MSX') {
-                odd = match.odds.D || null
-              } else if (finalBestBet.type === 'MS2') {
-                odd = match.odds.A || null
-              } else if (finalBestBet.type === 'KG_VAR') {
-                odd = match.odds.BTTSY || null
-              } else if (finalBestBet.type === 'KG_YOK') {
-                odd = match.odds.BTTSN || null
-              }
-              
-              // Oran yoksa veya 1.0'dan küçükse atla
-              if (!odd || odd < 1.0) {
-                console.log(`Skipping match ${match.match_id}: No valid odd for ${finalBestBet.label} (odd: ${odd})`)
-                analyzedCount++
-                continue
-              }
-              
-              // Sadece %60+ tutma oranına sahip bahisleri kabul et (daha güvenilir)
-              if (finalBestBet.rate < 60) {
-                console.log(`Skipping match ${match.match_id}: Rate too low (${finalBestBet.rate}%) for ${finalBestBet.label}`)
-                analyzedCount++
-                continue
-              }
-              
-              let recommendation = ''
-              if (finalBestBet.rate >= 90) {
-                recommendation = '🔥🔥🔥 Mükemmel tahmin!'
-              } else if (finalBestBet.rate >= 80) {
-                recommendation = '🔥 Çok güçlü tahmin!'
-              } else if (finalBestBet.rate >= 75) {
-                recommendation = '✅ Güçlü tahmin'
-              } else if (finalBestBet.rate >= 70) {
-                recommendation = '👍 İyi tahmin'
-              } else {
-                recommendation = '⚠️ Orta tahmin'
-              }
-              
-              predictions.push({
-                match,
-                betType: finalBestBet.type,
-                betLabel: finalBestBet.label,
-                rate: finalBestBet.rate,
-                recommendation,
-                odd
-              })
-            }
-            
-            analyzedCount++
-          } else {
-            console.error(`Invalid response for match ${match.match_id}:`, response.data)
-            errorCount++
-          }
-        } catch (error: any) {
-          console.error(`Error analyzing match ${match.match_id}:`, error)
+        })
+        if (!cleanOdds.H || !cleanOdds.D || !cleanOdds.A) continue
+        prepared.push({ match, cleanOdds })
+      }
+
+      if (prepared.length === 0) {
+        alert('MS1 / MSX / MS2 oranı olan maç bulunamadı.')
+        setAnalyzingCoupon(false)
+        return
+      }
+
+      const truncated = matches.filter((m) => {
+        const o = m.odds || {}
+        return o.H && o.D && o.A
+      }).length > COUPON_MAX_MATCHES
+
+      const res = await axios.post(
+        '/api/analyze-coupon-batch',
+        {
+          items: prepared.map((p) => ({ match_id: p.match.match_id, odds: p.cleanOdds }))
+        },
+        { timeout: 120000 }
+      )
+
+      const rows = res.data?.results as Array<{
+        match_id: string
+        ok: boolean
+        generalAnalysis?: { pool: { ms1Rate: number; msxRate: number; ms2Rate: number; kgVar: number; kgYok: number } }
+      }> | undefined
+
+      if (!rows || !Array.isArray(rows)) {
+        throw new Error('Sunucu yanıtı geçersiz')
+      }
+
+      const byId = new Map(rows.map((r) => [String(r.match_id), r]))
+
+      for (const { match } of prepared) {
+        const row = byId.get(String(match.match_id))
+        analyzedCount++
+        if (!row?.ok || !row.generalAnalysis?.pool) {
           errorCount++
-          // Hata olsa bile devam et
-          // Timeout veya network hatası olabilir, devam et
-          if (error.message === 'Timeout') {
-            console.warn(`Match ${match.match_id} timed out, skipping`)
+          continue
+        }
+        const pool = row.generalAnalysis.pool
+
+        const rates = [
+          { type: 'MS1', label: 'MS1', rate: pool.ms1Rate || 0 },
+          { type: 'MSX', label: 'MSX', rate: pool.msxRate || 0 },
+          { type: 'MS2', label: 'MS2', rate: pool.ms2Rate || 0 },
+          { type: 'KG_VAR', label: 'KG VAR', rate: pool.kgVar || 0 },
+          { type: 'KG_YOK', label: 'KG YOK', rate: pool.kgYok || 0 }
+        ]
+
+        const validBets = rates.filter((bet) => bet.rate >= 50)
+
+        if (validBets.length > 0) {
+          validBets.sort((a, b) => b.rate - a.rate)
+          const bestBet = validBets[0]
+
+          if (validBets.length > 1 && validBets[0].rate - validBets[1].rate < 0.5) {
+            const bet1Odd =
+              bestBet.type === 'MS1'
+                ? (match.odds.H || 0)
+                : bestBet.type === 'MSX'
+                  ? (match.odds.D || 0)
+                  : bestBet.type === 'MS2'
+                    ? (match.odds.A || 0)
+                    : bestBet.type === 'KG_VAR'
+                      ? (match.odds.BTTSY || 0)
+                      : (match.odds.BTTSN || 0)
+
+            const bet2Odd =
+              validBets[1].type === 'MS1'
+                ? (match.odds.H || 0)
+                : validBets[1].type === 'MSX'
+                  ? (match.odds.D || 0)
+                  : validBets[1].type === 'MS2'
+                    ? (match.odds.A || 0)
+                    : validBets[1].type === 'KG_VAR'
+                      ? (match.odds.BTTSY || 0)
+                      : (match.odds.BTTSN || 0)
+
+            if (bet2Odd > bet1Odd && bet2Odd > 0) {
+              const temp = validBets[0]
+              validBets[0] = validBets[1]
+              validBets[1] = temp
+            }
           }
+
+          const finalBestBet = validBets[0]
+
+          let odd: number | null = null
+          if (finalBestBet.type === 'MS1') {
+            odd = match.odds.H || null
+          } else if (finalBestBet.type === 'MSX') {
+            odd = match.odds.D || null
+          } else if (finalBestBet.type === 'MS2') {
+            odd = match.odds.A || null
+          } else if (finalBestBet.type === 'KG_VAR') {
+            odd = match.odds.BTTSY || null
+          } else if (finalBestBet.type === 'KG_YOK') {
+            odd = match.odds.BTTSN || null
+          }
+
+          if (!odd || odd < 1.0) {
+            continue
+          }
+
+          if (finalBestBet.rate < 60) {
+            continue
+          }
+
+          let recommendation = ''
+          if (finalBestBet.rate >= 90) {
+            recommendation = '🔥🔥🔥 Mükemmel tahmin!'
+          } else if (finalBestBet.rate >= 80) {
+            recommendation = '🔥 Çok güçlü tahmin!'
+          } else if (finalBestBet.rate >= 75) {
+            recommendation = '✅ Güçlü tahmin'
+          } else if (finalBestBet.rate >= 70) {
+            recommendation = '👍 İyi tahmin'
+          } else {
+            recommendation = '⚠️ Orta tahmin'
+          }
+
+          predictions.push({
+            match,
+            betType: finalBestBet.type,
+            betLabel: finalBestBet.label,
+            rate: finalBestBet.rate,
+            recommendation,
+            odd
+          })
         }
-        
-        // Her 10 maçta bir progress göster
-        if ((i + 1) % 10 === 0) {
-          console.log(`Progress: ${i + 1}/${matches.length} matches analyzed`)
-        }
+      }
+
+      if (truncated) {
+        console.warn(
+          `[Kupon] En fazla ${COUPON_MAX_MATCHES} maç analiz edildi; liste daha uzun.`
+        )
       }
       
       // Oranları yüksekten düşüğe sırala
@@ -467,11 +418,7 @@ export default function AnalysisRobotPage() {
       console.error('Error analyzing coupon:', error)
       alert(`Kupon analizi sırasında bir hata oluştu: ${error.message || 'Bilinmeyen hata'}`)
     } finally {
-      // Timeout'u temizle
-      clearTimeout(globalTimeout)
-      // Her durumda loading'i kapat
       setAnalyzingCoupon(false)
-      console.log('[analyzeCoupon] Finished, loading set to false')
     }
   }
 
@@ -580,7 +527,6 @@ export default function AnalysisRobotPage() {
             <Link href="/">Ana Sayfa</Link>
             <Link href="/odds">Oranlar</Link>
             <Link href="/analysis-robot">Analiz Robotu</Link>
-            <Link href="/stats">İstatistik</Link>
           </nav>
         </div>
       </nav>
@@ -643,6 +589,10 @@ export default function AnalysisRobotPage() {
             )}
           </button>
         </div>
+        <p style={{ marginTop: '12px', fontSize: '12px', color: '#6b7280', lineHeight: 1.5 }}>
+          Kupon tahmini, listede sıradaki en fazla 200 maçı <strong>tek sunucu isteğinde</strong> analiz eder; yüzlerce
+          ayrı istek yerine CSV bir kez okunur, süre genelde birkaç saniye sürer.
+        </p>
       </div>
 
       {/* Kupon Tahminleri - 3 Öbek */}
@@ -724,12 +674,19 @@ export default function AnalysisRobotPage() {
 
       {matches.length === 0 && !loading && (
         <div style={{ textAlign: 'center', padding: '40px', color: '#9ca3af' }}>
-          <p>Henüz maç bulunamadı. Lütfen daha sonra tekrar deneyin.</p>
+          {matchesError ? (
+            <>
+              <p style={{ color: '#f87171', marginBottom: '12px' }}>{matchesError}</p>
+              <p style={{ fontSize: '14px' }}>Maçları Yenile ile tekrar deneyin.</p>
+            </>
+          ) : (
+            <p>Şu an gösterilecek gelecek maç yok (program boş veya tümü başlamış olabilir). Maçları Yenile deyin.</p>
+          )}
         </div>
       )}
 
       {matches.length > 0 && (
-        <div className="matches-container" style={{ overflowX: 'auto' }}>
+        <div className="matches-container">
           <table className="matches-table">
             <thead>
               <tr>

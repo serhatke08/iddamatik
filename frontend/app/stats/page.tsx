@@ -17,7 +17,6 @@ export default function StatsPage() {
             <a href="/">Ana Sayfa</a>
             <a href="/odds">Oranlar</a>
             <a href="/analysis-robot">Analiz Robotu</a>
-            <a href="/stats">İstatistik</a>
           </nav>
         </div>
       </nav>

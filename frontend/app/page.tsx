@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import axios from 'axios'
 import Link from 'next/link'
+import { GuideCallout } from '@/components/GuideCallout'
 import { usePathname } from 'next/navigation'
 
 interface Match {
@@ -1207,6 +1208,8 @@ export default function Home() {
           </nav>
         </div>
       </nav>
+
+      <GuideCallout />
 
       {/* Banner Reklam Alanı - Boşluk */}
       <div className="banner-space" style={{ height: '100px', width: '100%' }}></div>
